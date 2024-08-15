@@ -1,16 +1,21 @@
-.extern stack_top
+.section ".text.boot"
+
+    .org 0x80000
+
 .globl _start
 
-
-// Start
 _start:
-    ldr x30, =stack_top
-    mov sp, x30
-    bl main
+    ldr     x5, =_start
+    mov     sp, x5
 
-// System off
-.equ _psci_system_off, 0x84000008
-.globl system_off
-system_off:
-    ldr x0, =_psci_system_off
-    hvc #0
+    ldr     x5, =__bss_start
+    ldr     w6, =__bss_size
+1:  cbz     w6, 2f
+    str     xzr, [x5], #8
+    sub     w6, w6, #1
+    cbnz    w6, 1b
+2:  bl      main
+halt:
+    wfe
+    b halt
+

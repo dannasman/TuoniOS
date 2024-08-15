@@ -3,23 +3,26 @@
 use core::arch::global_asm;
 use core::fmt::Write;
 
+mod mmio;
 mod panic;
 mod serial;
 
+use crate::mmio::*;
 use crate::serial::Uart;
 
-const PL011_BASE_ADDRESS: *mut u8 = 0x900_0000 as *mut u8;
+const MMIO_BASE: *mut u32 = 0x3f00_0000 as *mut u32;
+
+const TUONI_MMIO: MMIO = MMIO {
+    base: MMIO_BASE
+};
 
 global_asm!(include_str!("boot.s"));
 
 #[no_mangle]
 pub extern "C" fn main() -> ! {
-    let mut uart = unsafe { Uart::new(PL011_BASE_ADDRESS) };
+    let mut uart = unsafe { Uart::new(TUONI_MMIO) };
 
-    uart.write_byte(0x21);
-
-    writeln!(uart, "Hello World!").unwrap();
+    writeln!(uart, "Hello World!\r\n").unwrap();
 
     loop {}
 }
-

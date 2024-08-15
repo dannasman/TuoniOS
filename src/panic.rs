@@ -4,4 +4,3 @@ use core::panic::PanicInfo;
 fn on_panic(_info: &PanicInfo) -> ! {
     loop {}
 }
-

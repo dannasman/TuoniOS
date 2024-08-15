@@ -1,7 +1,7 @@
 kernel    := tuoni
 target    := aarch64-unknown-none
 qemu      := qemu-system-aarch64
-qemuflags := -machine virt -m 1024M -cpu cortex-a53 -nographic -s
+qemuflags := -machine type=raspi3b -s -nographic
 
 .PHONY: all clean run kernel
 
@@ -20,7 +20,7 @@ kernel-release:
 	cargo build --release
 
 kernel-debug:
-	cargo build --profile=dbg
+	cargo build
 
 type-sizes:
 	cargo rustc -- -Zprint-type-sizes
