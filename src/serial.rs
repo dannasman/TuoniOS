@@ -38,7 +38,7 @@ impl Uart {
             (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10)
         );
 
-        mmio.write(Offset::UART0_CR as isize, (1 << 0) | (1 << 8) | (1 << 9)); 
+        mmio.write(Offset::UART0_CR as isize, (1 << 0) | (1 << 8) | (1 << 9));
         */
         Self { mmio }
     }
