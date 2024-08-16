@@ -22,7 +22,6 @@ static mut MBOX: MBox = MBox([
     0,
 ]);
 
-#[repr(C)]
 pub struct Uart {
     mmio: MMIO,
 }
