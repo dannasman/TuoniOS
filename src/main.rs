@@ -21,5 +21,5 @@ pub extern "C" fn main() -> ! {
 
     writeln!(uart, "Hello World!\r\n").unwrap();
 
-    loop {}
+    loop { uart.write_byte(uart.read_byte() as u8) }
 }

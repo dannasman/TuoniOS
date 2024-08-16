@@ -5,19 +5,18 @@ pub struct MMIO {
 }
 
 impl MMIO {
-    #[inline(always)]
-    pub fn new(base: *mut u32) -> Self {
+    pub unsafe fn new(base: *mut u32) -> Self {
         MMIO { base }
     }
 
     #[inline(always)]
-    pub fn write(&self, reg: usize, data: u32) {
-        unsafe { self.base.byte_add(reg).write_volatile(data) }
+    pub unsafe fn write(&self, reg: usize, data: u32) {
+        self.base.byte_add(reg).write_volatile(data)
     }
 
     #[inline(always)]
-    pub fn read(&self, reg: usize) -> u32 {
-        unsafe { self.base.byte_add(reg).read_volatile() }
+    pub unsafe fn read(&self, reg: usize) -> u32 {
+        self.base.byte_add(reg).read_volatile()
     }
 
     #[inline(always)]
