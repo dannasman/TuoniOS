@@ -14,7 +14,7 @@ _start:
     str     xzr, [x5], #8
     sub     w6, w6, #1
     cbnz    w6, 1b
-2:  bl      main
+2:  bl      kernel_main
 halt:
     wfe
     b halt

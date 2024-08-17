@@ -15,7 +15,7 @@ const MMIO_BASE: *mut u32 = 0x0800_0000 as *mut u32;
 global_asm!(include_str!("boot.s"));
 
 #[no_mangle]
-pub extern "C" fn main() -> ! {
+pub extern "C" fn kernel_main() -> ! {
     let mut mmio = unsafe { MMIO::new(MMIO_BASE) };
     let mut uart = unsafe { Uart::new(mmio) };
 
