@@ -1,7 +1,7 @@
 kernel    := tuoni
 target    := aarch64-unknown-none
 qemu      := qemu-system-aarch64
-qemuflags := -machine type=raspi3b -s -nographic
+qemuflags := -machine virt -m 1024 -cpu cortex-a53 -nographic -s
 
 .PHONY: all clean run kernel
 
