@@ -8,14 +8,15 @@ const FR_RXFE: u32 = 1 << 4;
 const FR_TXFF: u32 = 1 << 5;
 
 pub struct Uart {
-    mmio: MMIO,
+    mmio: Mmio,
 }
 
 impl Uart {
-    pub unsafe fn new(mmio: MMIO) -> Self {
+    pub unsafe fn new(mmio: Mmio) -> Self {
         Self { mmio }
     }
 
+    #[inline(always)]
     pub fn write_byte(&self, byte: u8) {
         while self.read_flag_register() & FR_TXFF != 0 {}
 
@@ -26,11 +27,13 @@ impl Uart {
         while self.read_flag_register() & FR_BUSY != 0 {}
     }
 
+    #[inline(always)]
     pub fn read_byte(&self) -> u32 {
         while self.read_flag_register() & FR_RXFE != 0 {}
         unsafe { self.mmio.read(Offset::UART0_BASE as usize) }
     }
 
+    #[inline(always)]
     fn read_flag_register(&self) -> u32 {
         unsafe { self.mmio.read(Offset::UART0_FR as usize) }
     }

@@ -1,12 +1,12 @@
 use core::arch::asm;
 
-pub struct MMIO {
+pub struct Mmio {
     pub base: *mut u32,
 }
 
-impl MMIO {
+impl Mmio {
     pub unsafe fn new(base: *mut u32) -> Self {
-        MMIO { base }
+        Mmio { base }
     }
 
     #[inline(always)]
