@@ -7,3 +7,5 @@ edition = "2021"
 
 [profile.dev]
 opt-level = 3
+debuginfo-level = 2
+debuginfo-level-rustc = 2

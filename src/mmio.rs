@@ -1,5 +1,6 @@
 use core::arch::asm;
 
+#[derive(Debug)]
 pub struct Mmio {
     pub base: *mut u32,
 }
@@ -31,7 +32,7 @@ impl Mmio {
 
 pub enum Offset {
     UART0_BASE = 0x0100_0000,
-    UART0_RSRECR = 0x0100_0000+ 0x04,
+    UART0_RSRECR = 0x0100_0000 + 0x04,
     UART0_FR = 0x0100_0000 + 0x18,
     UART0_ILPR = 0x0100_0000 + 0x20,
     UART0_IBRD = 0x0100_0000 + 0x24,

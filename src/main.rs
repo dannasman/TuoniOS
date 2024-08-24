@@ -3,6 +3,7 @@
 use core::arch::global_asm;
 use core::fmt::Write;
 
+mod exception;
 mod mmio;
 mod panic;
 mod serial;
@@ -19,7 +20,12 @@ pub extern "C" fn kernel_main() -> ! {
     let mut mmio = unsafe { Mmio::new(MMIO_BASE) };
     let mut uart = unsafe { Uart::new(mmio) };
 
+    let addr = 0xffff_0000_0000_0000 as *mut u32;
+    let _ = unsafe { addr.read_volatile() };
+
     writeln!(uart, "Hello World!").unwrap();
 
-    loop { uart.write_byte(uart.read_byte() as u8) }
+    loop {
+        uart.write_byte(uart.read_byte() as u8)
+    }
 }

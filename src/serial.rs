@@ -7,6 +7,7 @@ const FR_BUSY: u32 = 1 << 3;
 const FR_RXFE: u32 = 1 << 4;
 const FR_TXFF: u32 = 1 << 5;
 
+#[derive(Debug)]
 pub struct Uart {
     mmio: Mmio,
 }

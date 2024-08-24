@@ -9,6 +9,6 @@ SECTIONS
     .bss : { *(.bss) }
 
     . = ALIGN(8);
-    . = . + 0x4000;
+    . = . + 0x1000;
     __stack_top = .;
 }
