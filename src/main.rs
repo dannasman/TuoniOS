@@ -17,11 +17,8 @@ global_asm!(include_str!("boot.s"));
 
 #[no_mangle]
 pub extern "C" fn kernel_main() -> ! {
-    let mut mmio = unsafe { Mmio::new(MMIO_BASE) };
+    let mmio = unsafe { Mmio::new(MMIO_BASE) };
     let mut uart = unsafe { Uart::new(mmio) };
-
-    let addr = 0xffff_0000_0000_0000 as *mut u32;
-    let _ = unsafe { addr.read_volatile() };
 
     writeln!(uart, "Hello World!").unwrap();
 

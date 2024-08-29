@@ -49,3 +49,16 @@ fn safe_exception(_frame: &mut InterruptFrame) {
     writeln!(uart, "exception occured").unwrap();
     loop {}
 }
+
+#[no_mangle]
+pub extern "C" fn interrupt(frame: *mut InterruptFrame) {
+    unsafe { safe_interrupt(&mut *frame) }
+}
+
+fn safe_interrupt(_frame: &mut InterruptFrame) {
+    let mut mmio = unsafe { Mmio::new(MMIO_BASE) };
+    let mut uart = unsafe { Uart::new(mmio) };
+
+    writeln!(uart, "interrupt occured").unwrap();
+    loop {}
+}
