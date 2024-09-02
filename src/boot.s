@@ -1,12 +1,7 @@
-.section ".text.boot"
-.extern __stack_top
-
+.section ".init"
 .globl _start
 
 _start:
-    ldr     x30, =__stack_top
-    mov     sp, x30
-
     mrs     x0, CurrentEL
     cmp     x0, 0b0100
     beq     in_el1
@@ -56,9 +51,63 @@ in_el1:
 
     // TOOD: msr     SP_EL1, x30 (causes exception)
 
-    bl      kernel_main
+    ldr     x0, =ttb1_base
+    msr     ttbr1_el1, x0
+    isb
+
+    ldr     x0, =0xff
+    msr     mair_el1, x0
+
+    /*mov     x0, (16 << 0)
+    orr     x0, x0, (1 << 30)
+    orr     x0, x0, (3 << 28)
+    orr     x0, x0, (1 << 26)
+    orr     x0, x0, (1 << 24)
+    mov     x1, (16 << 16)
+    orr     x0, x0, x1
+    //orr     x0, x0, (1 << 14)
+    orr     x0, x0, (3 << 12)
+    orr     x0, x0, (1 << 10)
+    orr     x0, x0, (1 << 8)*/
+    ldr     x0, =TCR_EL1_VALUE
+    msr     tcr_el1, x0
+    isb
+
+    dsb     ish
+    isb
+
+    mrs     x0, sctlr_el1
+    orr     x0, x0, 0x1
+    msr     sctlr_el1, x0
+    isb
+
+    /*ldr     x30, =__sstack
+    mov     sp, x30*/
+
+    ldr     x0, =kernel_main
+    blr     x0
+
 in_el0:
-    b .
+    b       .
+
+.macro      PUT_64B high, low
+.word       \low
+.word       \high
+.endm
+
+.macro      BLOCK_1GB PA, ATTR_HI, ATTR_LO
+PUT_64B     \ATTR_HI, ((\PA) & 0xC0000000) | \ATTR_LO | 0x1
+.endm
+
+.align 12
+ttb1_base:
+    BLOCK_1GB   0x00000000, 0, 0x740
+    BLOCK_1GB   0x40000000, 0, 0x74c
+    BLOCK_1GB   0x80000000, 0, 0x74c
+
+.equ        TCR_EL1_VALUE, 0x5b5503510
+
+.section    ".text.exception"
 
 exception_entry:
     stp     x20, x21, [sp, -16]!
@@ -90,16 +139,16 @@ exception_entry:
     mov     x0, sp
     bl      exception
 
-    ldp     x2, x3, [sp, #16]
-    ldp     x4, x5, [sp, #32]
-    ldp     x6, x7, [sp, #48]
-    ldp     x8, x9, [sp, #64]
-    ldp     x10, x11, [sp, #80]
-    ldp     x12, x13, [sp, #96]
-    ldp     x14, x15, [sp, #112]
-    ldp     x16, x17, [sp, #128]
-    ldp     x18, x29, [sp, #144]
-    ldp     x30, x0, [sp, #160]
+    ldp     x2, x3, [sp, 16]
+    ldp     x4, x5, [sp, 32]
+    ldp     x6, x7, [sp, 48]
+    ldp     x8, x9, [sp, 64]
+    ldp     x10, x11, [sp, 80]
+    ldp     x12, x13, [sp, 96]
+    ldp     x14, x15, [sp, 112]
+    ldp     x16, x17, [sp, 128]
+    ldp     x18, x29, [sp, 144]
+    ldp     x30, x0, [sp, 160]
     mov     x1, sp
     mov     sp, x0
     ldp     x0, x1, [x1, 0]
@@ -134,16 +183,16 @@ interrupt_entry:
     mov     x0, sp
     bl      interrupt
 
-    ldp     x2, x3, [sp, #16]
-    ldp     x4, x5, [sp, #32]
-    ldp     x6, x7, [sp, #48]
-    ldp     x8, x9, [sp, #64]
-    ldp     x10, x11, [sp, #80]
-    ldp     x12, x13, [sp, #96]
-    ldp     x14, x15, [sp, #112]
-    ldp     x16, x17, [sp, #128]
-    ldp     x18, x29, [sp, #144]
-    ldp     x30, x0, [sp, #160]
+    ldp     x2, x3, [sp, 16]
+    ldp     x4, x5, [sp, 32]
+    ldp     x6, x7, [sp, 48]
+    ldp     x8, x9, [sp, 64]
+    ldp     x10, x11, [sp, 80]
+    ldp     x12, x13, [sp, 96]
+    ldp     x14, x15, [sp, 112]
+    ldp     x16, x17, [sp, 128]
+    ldp     x18, x29, [sp, 144]
+    ldp     x30, x0, [sp, 160]
     mov     x1, sp
     mov     sp, x0
     ldp     x0, x1, [x1, 0]
@@ -184,8 +233,8 @@ vector_table_el1:
     .balign 0x80
     b       exception_entry
 
-.equ PSCI_SYSTEM_OFF, 0x84000008
-.globl system_off
+.equ        PSCI_SYSTEM_OFF, 0x84000008
+.globl      system_off
 system_off:
     ldr     x0, =PSCI_SYSTEM_OFF
-    hvc     #0
+    hvc     0
