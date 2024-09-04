@@ -1,5 +1,6 @@
 .section ".init"
 .globl _start
+.extern __physical_stack
 
 _start:
     mrs     x0, CurrentEL
@@ -108,6 +109,22 @@ ttb1_base:
 .equ        TCR_EL1_VALUE, 0x5b5503510
 
 .section    ".text.exception"
+
+.align 12
+page_table_l0:
+    .skip 4096, 0
+
+.align 12
+page_table_l1:
+    .skip 4096, 0
+
+.align 12
+page_table_l2:
+    .skip 4096, 0
+
+.align 12
+page_table_l3:
+    .skip 4096, 0
 
 exception_entry:
     stp     x20, x21, [sp, -16]!
