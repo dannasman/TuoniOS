@@ -28,6 +28,7 @@ SECTIONS
     __virtual_code_start = __virtual_kernel_start + (__boot_end - __kernel_start);
     HIDDEN(__kernel_va_code_offset = __virtual_kernel_start - __kernel_start - __boot_end);
 
+    . = ALIGN(0x1000);
     .text : AT(ADDR(.text) - __kernel_va_code_offset) {
         *(.text.exception);
         *(.text.abort);
@@ -56,4 +57,6 @@ SECTIONS
         . = ALIGN(0x1000);
         __ebss = .;
     }
+
+    __stack_start = .;
 }

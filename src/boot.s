@@ -1,6 +1,6 @@
 .section ".init"
 .globl _start
-.extern __physical_stack
+.extern __stack_start
 
 _start:
     mrs     x0, CurrentEL
@@ -52,6 +52,66 @@ in_el1:
 
     // TOOD: msr     SP_EL1, x30 (causes exception)
 
+    mrs     x0, sctlr_el1
+    bic     x0, x0, (0x1 << 2)
+    msr     sctlr_el1, x0
+
+    mov     x0, 0x0
+    msr     csselr_el1, x0
+
+    mrs     x4, ccsidr_el1
+    and     x1, x4, 0x7
+    add     x1, x1, 0x4
+    ldr     x3, =0x7fff
+    and     x2, x3, x4, lsr 13
+    ldr     x3, =0x3ff
+    and     x3, x3, x4, lsr 3
+    clz     w4, w3
+
+    mov     x5, 0
+way_loop_l1:
+    mov     x6, 0
+set_loop_l1:
+    lsl     x7, x5, x4
+    orr     x7, x0, x7
+    lsl     x8, x6, x1
+    orr     x7, x7, x8
+    dc      cisw, x7
+    add     x6, x6, 1
+    cmp     x6, x2
+    ble     set_loop_l1
+    add     x5, x5, 1
+    cmp     x5, x3
+    ble     way_loop_l1
+
+    mov     x0, 0x2
+    msr     csselr_el1, x0
+
+    mrs     x4, ccsidr_el1
+    and     x1, x4, 0x7
+    add     x1, x1, 0x4
+    ldr     x3, =0x7fff
+    and     x2, x3, x4, lsr 13
+    ldr     x3, =0x3ff
+    and     x3, x3, x4, lsr 3
+    clz     w4, w3
+
+    mov     x5, 0
+way_loop_l2:
+    mov     x6, 0
+set_loop_l2:
+    lsl     x7, x5, x4
+    orr     x7, x0, x7
+    lsl     x8, x6, x1
+    orr     x7, x7, x8
+    dc      cisw, x7
+    add     x6, x6, 1
+    cmp     x6, x2
+    ble     set_loop_l2
+    add     x5, x5, 1
+    cmp     x5, x3
+    ble     way_loop_l2
+
     ldr     x0, =ttb1_base
     msr     ttbr1_el1, x0
     isb
@@ -59,17 +119,6 @@ in_el1:
     ldr     x0, =0xff
     msr     mair_el1, x0
 
-    /*mov     x0, (16 << 0)
-    orr     x0, x0, (1 << 30)
-    orr     x0, x0, (3 << 28)
-    orr     x0, x0, (1 << 26)
-    orr     x0, x0, (1 << 24)
-    mov     x1, (16 << 16)
-    orr     x0, x0, x1
-    //orr     x0, x0, (1 << 14)
-    orr     x0, x0, (3 << 12)
-    orr     x0, x0, (1 << 10)
-    orr     x0, x0, (1 << 8)*/
     ldr     x0, =TCR_EL1_VALUE
     msr     tcr_el1, x0
     isb
@@ -77,13 +126,15 @@ in_el1:
     dsb     ish
     isb
 
+    ldr     x30, =__stack_start
+    mov     sp, x30
+
     mrs     x0, sctlr_el1
     orr     x0, x0, 0x1
+    orr     x0, x0, (0x1 << 2)
+    orr     x0, x0, (0x1 << 12)
     msr     sctlr_el1, x0
     isb
-
-    /*ldr     x30, =__sstack
-    mov     sp, x30*/
 
     ldr     x0, =kernel_main
     blr     x0
