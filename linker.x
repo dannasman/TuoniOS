@@ -5,7 +5,6 @@ __kernel_start = __ram_start + 0x40080000;
 __virtual_ram_start = 0xffff000000000000;
 __virtual_kernel_start = __virtual_ram_start + __kernel_start;
 
-ENTRY(_start)
 SECTIONS
 {
     . = __kernel_start;
@@ -57,6 +56,5 @@ SECTIONS
         . = ALIGN(0x1000);
         __ebss = .;
     }
-
     __stack_start = .;
 }
