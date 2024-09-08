@@ -50,73 +50,12 @@ in_el1:
     ldr     x1, =vector_table_el1
     msr     vbar_el1, x1
 
-    // TOOD: msr     SP_EL1, x30 (causes exception)
-
-    mrs     x0, sctlr_el1
-    bic     x0, x0, (0x1 << 2)
-    msr     sctlr_el1, x0
-
-    mov     x0, 0x0
-    msr     csselr_el1, x0
-
-    mrs     x4, ccsidr_el1
-    and     x1, x4, 0x7
-    add     x1, x1, 0x4
-    ldr     x3, =0x7fff
-    and     x2, x3, x4, lsr 13
-    ldr     x3, =0x3ff
-    and     x3, x3, x4, lsr 3
-    clz     w4, w3
-
-    mov     x5, 0
-way_loop_l1:
-    mov     x6, 0
-set_loop_l1:
-    lsl     x7, x5, x4
-    orr     x7, x0, x7
-    lsl     x8, x6, x1
-    orr     x7, x7, x8
-    dc      cisw, x7
-    add     x6, x6, 1
-    cmp     x6, x2
-    ble     set_loop_l1
-    add     x5, x5, 1
-    cmp     x5, x3
-    ble     way_loop_l1
-
-    mov     x0, 0x2
-    msr     csselr_el1, x0
-
-    mrs     x4, ccsidr_el1
-    and     x1, x4, 0x7
-    add     x1, x1, 0x4
-    ldr     x3, =0x7fff
-    and     x2, x3, x4, lsr 13
-    ldr     x3, =0x3ff
-    and     x3, x3, x4, lsr 3
-    clz     w4, w3
-
-    mov     x5, 0
-way_loop_l2:
-    mov     x6, 0
-set_loop_l2:
-    lsl     x7, x5, x4
-    orr     x7, x0, x7
-    lsl     x8, x6, x1
-    orr     x7, x7, x8
-    dc      cisw, x7
-    add     x6, x6, 1
-    cmp     x6, x2
-    ble     set_loop_l2
-    add     x5, x5, 1
-    cmp     x5, x3
-    ble     way_loop_l2
-
     ldr     x0, =ttb1_base
+    msr     ttbr0_el1, x0
     msr     ttbr1_el1, x0
     isb
 
-    ldr     x0, =0xff00
+    ldr     x0, =MAIR_EL1_VALUE
     msr     mair_el1, x0
 
     ldr     x0, =TCR_EL1_VALUE
@@ -131,8 +70,6 @@ set_loop_l2:
 
     mrs     x0, sctlr_el1
     orr     x0, x0, 0x1
-    orr     x0, x0, (0x1 << 2)
-    orr     x0, x0, (0x1 << 12)
     msr     sctlr_el1, x0
     isb
 
@@ -152,11 +89,30 @@ PUT_64B     \ATTR_HI, ((\PA) & 0xC0000000) | \ATTR_LO | 0x1
 
 .align 12
 ttb1_base:
-    BLOCK_1GB   0x00000000, 0, 0x740
-    BLOCK_1GB   0x40000000, 0, 0x74c
-    BLOCK_1GB   0x80000000, 0, 0x74c
+    BLOCK_1GB   0x00000000, 0x600000, 0x740
+    BLOCK_1GB   0x40000000, 0x600000, 0x744
+//    BLOCK_1GB   0x80000000, 0, 0x744
 
-.equ        TCR_EL1_VALUE, 0x5b5503510
+//          ATTR0:  0b00000000 << 0 | Device memory 
+//          ATTR1:  0b11111111 << 8 | Normal memory
+.equ        MAIR_EL1_VALUE, 0xff00
+
+//          IPS:    0b101   << 32
+//          TG1:    0b10    << 30
+//          SH1:    0b11    << 28
+//          ORGN1:  0b01    << 26
+//          IRGN1:  0b01    << 24
+//          EPD1:   0b0     << 23
+//          A1:     0b0     << 22
+//          T1SZ:   16      << 16
+//          TG0:    0b00    << 14
+//          SH0:    0b11    << 12
+//          ORGN0:  0b01    << 10
+//          IRGN0:  0b01    << 8
+//          EPD0:   0b0     << 7
+//          RES0:   0b0     << 6
+//          T0SZ:   16      << 0
+.equ        TCR_EL1_VALUE, 0x5b5103510
 
 .section    ".text.exception"
 
