@@ -11,7 +11,7 @@ mod serial;
 use crate::mmio::*;
 use crate::serial::Uart;
 
-const MMIO_BASE: *mut u32 = 0x0800_0000 as *mut u32;
+const MMIO_BASE: *mut u32 = 0xffff_0000_0800_0000 as *mut u32;
 
 global_asm!(include_str!("boot.s"));
 

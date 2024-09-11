@@ -1,7 +1,7 @@
 kernel    := tuoni
 target    := aarch64-unknown-none
 qemu      := qemu-system-aarch64
-qemuflags := -machine virt -m 2G -cpu cortex-a53 -nographic -s
+qemuflags := -machine virt -machine virtualization=true -m 2G -cpu cortex-a53 -nographic -s
 
 .PHONY: all clean run kernel
 

@@ -1,0 +1,44 @@
+ENTRY(_start)
+SECTIONS
+{
+    . = 0x40080000;
+
+    .physical_boot.text : {
+        _boot_start = .;
+        *(.init)
+        _boot_end = ABSOLUTE(.);
+    }
+
+    . += 0xffff000000000000;
+    _kernel_begin = .;
+
+
+    HIDDEN(_offset = _kernel_begin - _boot_end);
+    .text : AT(ADDR(.text) - _offset) {
+        *(.text.exception_table);
+        *(.text.*);
+    }
+
+    .rodata ALIGN(4) : AT(ADDR(.rodata) - _offset) {
+        *(.srodata*);
+        . = ALIGN(4);
+    }
+
+    .data ALIGN(4) : AT(ADDR(.data) - _offset) {
+        *(.data*);
+    }
+
+    .bss ALIGN(4)  : AT(ADDR(.data) - _offset) {
+        _bss_start = .;
+        *(.bss .bss.*);
+        . = ALIGN(4);
+        _bss_end = .;
+    }
+
+    _kernel_end = .;
+    
+    . = ALIGN(0x1000);
+    _stack_begin = .;
+    . += 0x4000;
+    _stack_end = .;
+}

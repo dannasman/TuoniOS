@@ -1,8 +1,17 @@
 .section ".init"
 .globl _start
-.extern __stack_start
+.extern _stack_end
+.extern _kernel_begin
 
 _start:
+    mrs     x0, mpidr_el1
+    and     x0, x0, 0xff;
+    cbz     x0, 1f
+0:
+    wfe
+    b       0b
+1:
+    msr     spsel, 1
     mrs     x0, CurrentEL
     cmp     x0, 0b0100
     beq     in_el1
@@ -46,14 +55,9 @@ in_el1:
 
     msr     DAIFSet, 0b1111
     //msr     DAIFClr, 0b1111
-
+    
     ldr     x1, =vector_table_el1
     msr     vbar_el1, x1
-
-    ldr     x0, =ttb1_base
-    msr     ttbr0_el1, x0
-    msr     ttbr1_el1, x0
-    isb
 
     ldr     x0, =MAIR_EL1_VALUE
     msr     mair_el1, x0
@@ -62,36 +66,53 @@ in_el1:
     msr     tcr_el1, x0
     isb
 
-    dsb     ish
+    ldr     x0, =pagetable_level0
+    ldr     x1, =pagetable_level1
+    orr     x2, x1, 3
+    str     x2, [x0]
+    str     x2, [x0, 8]
+
+    ldr     x4, =PERIPHERALS_BASE
+    lsr     x5, x4, 30
+    and     x5, x5, 0x1ff
+    lsl     x4, x5, 30
+    ldr     x6, =PERIPHERALS_ATTR
+    orr     x4, x4, x6
+    str     x4, [x1, x5, lsl 3]
+    
+    ldr     x4, =_kernel_begin
+    lsr     x5, x4, 30
+    and     x5, x5, 0x1ff
+    lsl     x4, x5, 30
+    ldr     x6, =CODE_ATTR
+    orr     x4, x4, x6
+    str     x4, [x1, x5, lsl 3]
+
+    msr     ttbr0_el1, x0
+    msr     ttbr1_el1, x0
     isb
 
-    ldr     x30, =__stack_start
+    ldr     x30, =_stack_end
     mov     sp, x30
 
     mrs     x0, sctlr_el1
     orr     x0, x0, 0x1
+    orr     x0, x0, (0x1 << 12)
     msr     sctlr_el1, x0
     isb
 
+.extern kernel_main
     ldr     x0, =kernel_main
     blr     x0
 in_el0:
     b       .
 
-.macro      PUT_64B high, low
-.word       \low
-.word       \high
-.endm
-
-.macro      BLOCK_1GB PA, ATTR_HI, ATTR_LO
-PUT_64B     \ATTR_HI, ((\PA) & 0xC0000000) | \ATTR_LO | 0x1
-.endm
-
-.align 12
-ttb1_base:
-    BLOCK_1GB   0x00000000, 0x600000, 0x740
-    BLOCK_1GB   0x40000000, 0x600000, 0x744
-//    BLOCK_1GB   0x80000000, 0, 0x744
+.balign 0x1000
+pagetable_level0:
+    .space 0x1000
+.balign 0x1000
+pagetable_level1:
+    .space 0x1000
 
 //          ATTR0:  0b00000000 << 0 | Device memory 
 //          ATTR1:  0b11111111 << 8 | Normal memory
@@ -114,7 +135,30 @@ ttb1_base:
 //          T0SZ:   16      << 0
 .equ        TCR_EL1_VALUE, 0x5b5103510
 
-.section    ".text.exception"
+.equ        PERIPHERALS_BASE, 0x0
+
+//          UXN:    0b1     << 54
+//          PXN:    0b1     << 53
+//          AF:     0b1     << 10
+//          SH:     0b10    << 8
+//          AP:     0b00    << 6
+//          NS:     0b0     << 5
+//          INDX:   0b000   << 2
+//          ENTRY:  0b01    << 0
+.equ        PERIPHERALS_ATTR, 0x60000000000601
+
+//          UXN:    0b0     << 54
+//          PXN:    0b0     << 53
+//          AF:     0b1     << 10
+//          SH:     0b11    << 8
+//          AP:     0b10    << 6
+//          NS:     0b0     << 5
+//          INDX:   0b001   << 2
+//          ENTRY:  0b01    << 0
+.equ        CODE_ATTR, 0x00000000000785
+
+.section ".text.exception_table"
+.global vector_table_el1
 
 exception_entry:
     stp     x20, x21, [sp, -16]!
@@ -240,8 +284,3 @@ vector_table_el1:
     .balign 0x80
     b       exception_entry
 
-.equ        PSCI_SYSTEM_OFF, 0x84000008
-.globl      system_off
-system_off:
-    ldr     x0, =PSCI_SYSTEM_OFF
-    hvc     0
