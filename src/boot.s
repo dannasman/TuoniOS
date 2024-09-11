@@ -151,27 +151,18 @@ pagetable_level1:
 //          PXN:    0b0     << 53
 //          AF:     0b1     << 10
 //          SH:     0b11    << 8
-//          AP:     0b10    << 6
+//          AP:     0b00    << 6
 //          NS:     0b0     << 5
 //          INDX:   0b001   << 2
 //          ENTRY:  0b01    << 0
-.equ        CODE_ATTR, 0x00000000000785
+.equ        CODE_ATTR, 0x00000000000705
 
 .section ".text.exception_table"
 .global vector_table_el1
 
 exception_entry:
-    stp     x20, x21, [sp, -16]!
-
-    mov     x21, sp
-    sub     x20, sp, 192
-    and     sp, x20, ~0b1111
-
+    sub     sp, sp, 192
     stp     x0, x1, [sp, 0]
-
-    add     x1, x2, 16
-    ldp     x20, x21, [x21]
-
     stp     x2, x3, [sp, 16]
     stp     x4, x5, [sp, 32]
     stp     x6, x7, [sp, 48]
@@ -188,7 +179,8 @@ exception_entry:
     stp     x0, x1, [sp, 176]
 
     mov     x0, sp
-    bl      exception
+    ldr     x20, =exception
+    blr     x20
 
     ldp     x2, x3, [sp, 16]
     ldp     x4, x5, [sp, 32]
@@ -232,7 +224,8 @@ interrupt_entry:
     stp     xzr, xzr, [sp, 176]
 
     mov     x0, sp
-    bl      interrupt
+    ldr     x20, =interrupt
+    blr     x20
 
     ldp     x2, x3, [sp, 16]
     ldp     x4, x5, [sp, 32]
