@@ -199,17 +199,8 @@ exception_entry:
     eret
 
 interrupt_entry:
-    stp     x20, x21, [sp, -16]!
-
-    mov     x21, sp
-    sub     x20, sp, 192
-    and     sp, x20, ~0b1111
-
+    sub     sp, sp, 192
     stp     x0, x1, [sp, 0]
-
-    add     x1, x2, 16
-    ldp     x20, x21, [x21]
-
     stp     x2, x3, [sp, 16]
     stp     x4, x5, [sp, 32]
     stp     x6, x7, [sp, 48]
