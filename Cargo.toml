@@ -5,7 +5,9 @@ edition = "2021"
 
 [dependencies]
 
+[[bin]]
+name = "tuoni"
+path = "kernel/lib.rs"
+
 [profile.dev]
 opt-level = 3
-debuginfo-level = 2
-debuginfo-level-rustc = 2

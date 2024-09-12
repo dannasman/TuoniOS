@@ -1,10 +1,11 @@
 #![no_std]
-#[macro_use]
-
 use core::fmt::Write;
 
-use crate::mmio::*;
-use crate::serial::Uart;
+//use crate::drivers::*;
+//use crate::mmio::*;
+
+use crate::drivers;
+use crate::arch;
 
 const MMIO_BASE: *mut u32 = 0x0800_0000 as *mut u32;
 
@@ -43,8 +44,8 @@ pub extern "C" fn exception(frame: *mut InterruptFrame) {
 }
 
 fn safe_exception(_frame: &mut InterruptFrame) {
-    let mut mmio = unsafe { Mmio::new(MMIO_BASE) };
-    let mut uart = unsafe { Uart::new(mmio) };
+    let mut mmio = unsafe { arch::mmio::Mmio::new(MMIO_BASE) };
+    let mut uart = unsafe { drivers::serial::Uart::new(mmio) };
 
     writeln!(uart, "exception occured").unwrap();
     loop {}
@@ -56,8 +57,8 @@ pub extern "C" fn interrupt(frame: *mut InterruptFrame) {
 }
 
 fn safe_interrupt(_frame: &mut InterruptFrame) {
-    let mut mmio = unsafe { Mmio::new(MMIO_BASE) };
-    let mut uart = unsafe { Uart::new(mmio) };
+    let mut mmio = unsafe { arch::mmio::Mmio::new(MMIO_BASE) };
+    let mut uart = unsafe { drivers::serial::Uart::new(mmio) };
 
     writeln!(uart, "interrupt occured").unwrap();
     loop {}

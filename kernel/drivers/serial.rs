@@ -1,6 +1,6 @@
 use core::fmt::{self, Write};
 
-use crate::mmio::*;
+use crate::arch;
 
 const FLAG_REGISTER_OFFSET: usize = 0x18;
 const FR_BUSY: u32 = 1 << 3;
@@ -9,11 +9,11 @@ const FR_TXFF: u32 = 1 << 5;
 
 #[derive(Debug)]
 pub struct Uart {
-    mmio: Mmio,
+    mmio: arch::mmio::Mmio,
 }
 
 impl Uart {
-    pub unsafe fn new(mmio: Mmio) -> Self {
+    pub unsafe fn new(mmio: arch::mmio::Mmio) -> Self {
         Self { mmio }
     }
 
@@ -22,7 +22,7 @@ impl Uart {
         while self.read_flag_register() & FR_TXFF != 0 {}
 
         unsafe {
-            self.mmio.write(Offset::UART0_BASE as usize, byte as u32);
+            self.mmio.write(arch::mmio::Offset::UART0_BASE as usize, byte as u32);
         }
 
         while self.read_flag_register() & FR_BUSY != 0 {}
@@ -31,12 +31,12 @@ impl Uart {
     #[inline(always)]
     pub fn read_byte(&self) -> u32 {
         while self.read_flag_register() & FR_RXFE != 0 {}
-        unsafe { self.mmio.read(Offset::UART0_BASE as usize) }
+        unsafe { self.mmio.read(arch::mmio::Offset::UART0_BASE as usize) }
     }
 
     #[inline(always)]
     fn read_flag_register(&self) -> u32 {
-        unsafe { self.mmio.read(Offset::UART0_FR as usize) }
+        unsafe { self.mmio.read(arch::mmio::Offset::UART0_FR as usize) }
     }
 }
 
