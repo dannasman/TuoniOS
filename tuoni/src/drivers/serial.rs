@@ -22,7 +22,8 @@ impl Uart {
         while self.read_flag_register() & FR_TXFF != 0 {}
 
         unsafe {
-            self.mmio.write(arch::mmio::Offset::UART0_BASE as usize, byte as u32);
+            self.mmio
+                .write(arch::mmio::Offset::UART0_BASE as usize, byte as u32);
         }
 
         while self.read_flag_register() & FR_BUSY != 0 {}

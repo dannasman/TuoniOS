@@ -8,19 +8,19 @@ qemuflags := -machine virt -m 2G -cpu cortex-a53 -nographic -s
 all: kernel-release
 
 clean:
-	cargo clean
+	cd tuoni && cargo clean && cargo fmt
 
 run: kernel-release
-	$(qemu) $(qemuflags) -kernel target/$(target)/release/$(kernel)
+	cd tuoni && $(qemu) $(qemuflags) -kernel target/$(target)/release/$(kernel)
 
 debug: kernel-debug
-	$(qemu) $(qemuflags) -S -kernel target/$(target)/debug/$(kernel)
+	cd tuoni && $(qemu) $(qemuflags) -S -kernel target/$(target)/debug/$(kernel)
 
 kernel-release: 
-	cargo build --release
+	cd tuoni && cargo build --release
 
 kernel-debug:
-	cargo build
+	cd tuoni && cargo build
 
 type-sizes:
-	cargo rustc -- -Zprint-type-sizes
+	cd tuoni && cargo rustc -- -Zprint-type-sizes

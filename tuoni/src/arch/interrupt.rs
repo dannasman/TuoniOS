@@ -4,8 +4,8 @@ use core::fmt::Write;
 //use crate::drivers::*;
 //use crate::mmio::*;
 
-use crate::drivers;
 use crate::arch;
+use crate::drivers;
 
 const MMIO_BASE: *mut u32 = 0x0800_0000 as *mut u32;
 

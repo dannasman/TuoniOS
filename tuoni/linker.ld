@@ -26,6 +26,7 @@ SECTIONS
 
     .data ALIGN(4) : AT(ADDR(.data) - _offset) {
         *(.data*);
+        . = ALIGN(8);
     }
 
     .bss ALIGN(4)  : AT(ADDR(.data) - _offset) {
@@ -36,6 +37,11 @@ SECTIONS
     }
 
     _kernel_end = .;
+
+    . = ALIGN(0x1000);
+    _early_heap_begin = .;
+    . += 0x100000;
+    _early_heap_end = .;
     
     . = ALIGN(0x1000);
     _stack_begin = .;
