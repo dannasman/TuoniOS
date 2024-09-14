@@ -48,7 +48,40 @@ fn safe_exception(frame: &mut InterruptFrame) {
     let mut mmio = unsafe { arch::mmio::Mmio::new(MMIO_BASE) };
     let mut uart = unsafe { drivers::serial::Uart::new(mmio) };
 
-    writeln!(uart, "exception occured").unwrap();
+    writeln!(uart, "Exception occured!").unwrap();
+    writeln!(
+        uart,
+        "Frame:\nx0={:<#16x}\tx1={:<#16x}\tx2={:<#16x}\tx3={:<#16x}\n\
+        x4={:<#16x}\tx5={:<#16x}\tx6={:<#16x}\tx7={:<#16x}\n\
+        x8={:<#16x}\tx9={:<#16x}\tx10={:<#16x}\tx11={:<#16x}\n\
+        x12={:<#16x}\tx13={:<#16x}\tx14={:<#16x}\tx15={:<#16x}\n\
+        x16={:<#16x}\tx17={:<#16x}\tx18={:<#16x}\nfp={:<#16x}\n\
+        lr={:<#16x}\nesr={:<#16x}\nfar={:<#16x}",
+        frame.x0,
+        frame.x1,
+        frame.x2,
+        frame.x3,
+        frame.x4,
+        frame.x5,
+        frame.x6,
+        frame.x7,
+        frame.x8,
+        frame.x9,
+        frame.x10,
+        frame.x11,
+        frame.x12,
+        frame.x13,
+        frame.x14,
+        frame.x15,
+        frame.x16,
+        frame.x17,
+        frame.x18,
+        frame.fp,
+        frame.lr,
+        frame.esr,
+        frame.far
+    )
+    .unwrap();
     loop {}
 }
 
@@ -57,10 +90,43 @@ pub extern "C" fn interrupt(frame: *mut InterruptFrame) {
     unsafe { safe_interrupt(&mut *frame) }
 }
 
-fn safe_interrupt(_frame: &mut InterruptFrame) {
+fn safe_interrupt(frame: &mut InterruptFrame) {
     let mut mmio = unsafe { arch::mmio::Mmio::new(MMIO_BASE) };
     let mut uart = unsafe { drivers::serial::Uart::new(mmio) };
 
-    writeln!(uart, "interrupt occured").unwrap();
+    writeln!(uart, "Interrupt occured!").unwrap();
+    writeln!(
+        uart,
+        "Frame:\nx0={:<#16x}\tx1={:<#16x}\tx2={:<#16x}\tx3={:<#16x}\n\
+        x4={:<#16x}\tx5={:<#16x}\tx6={:<#16x}\tx7={:<#16x}\n\
+        x8={:<#16x}\tx9={:<#16x}\tx10={:<#16x}\tx11={:<#16x}\n\
+        x12={:<#16x}\tx13={:<#16x}\tx14={:<#16x}\tx15={:<#16x}\n\
+        x16={:<#16x}\tx17={:<#16x}\tx18={:<#16x}\nfp={:<#16x}\n\
+        lr={:<#16x}\nesr={}\nfar={:<#16x}",
+        frame.x0,
+        frame.x1,
+        frame.x2,
+        frame.x3,
+        frame.x4,
+        frame.x5,
+        frame.x6,
+        frame.x7,
+        frame.x8,
+        frame.x9,
+        frame.x10,
+        frame.x11,
+        frame.x12,
+        frame.x13,
+        frame.x14,
+        frame.x15,
+        frame.x16,
+        frame.x17,
+        frame.x18,
+        frame.fp,
+        frame.lr,
+        frame.esr,
+        frame.far
+    )
+    .unwrap();
     loop {}
 }

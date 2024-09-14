@@ -1,3 +1,4 @@
+#![no_std]
 use core::fmt::{self, Write};
 
 use crate::arch;

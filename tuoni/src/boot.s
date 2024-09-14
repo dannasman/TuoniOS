@@ -1,7 +1,8 @@
 .section ".init"
 .globl _start
-.extern _stack_end
 .extern _kernel_begin
+.extern _early_heap_begin
+.extern _stack_end
 
 _start:
     mrs     x0, mpidr_el1
@@ -33,11 +34,11 @@ in_el3:
     msr     spsr_el3, x0
 
     adr     x0, in_el2
-    msr     ELR_EL3, x0
+    msr     elr_el3, x0
     eret
 in_el2:
     msr     sctlr_el1, xzr
-    mrs     x0, HCR_EL2
+    mrs     x0, hcr_el2
     orr     x0, x0, (1 << 31)
     and     x0, x0, ~(1 << 5)
     and     x0, x0, ~(1 << 4)
@@ -58,6 +59,10 @@ in_el1:
     
     ldr     x1, =vector_table_el1
     msr     vbar_el1, x1
+
+    mrs     x0, cpacr_el1
+    orr     x0, x0, (0b11 << 20)
+    msr     cpacr_el1, x0
 
     ldr     x0, =MAIR_EL1_VALUE
     msr     mair_el1, x0
@@ -101,9 +106,12 @@ in_el1:
     msr     sctlr_el1, x0
     isb
 
-.extern kernel_main
-    ldr     x0, =kernel_main
-    blr     x0
+    ldr     x0, =_kernel_begin
+    ldr     x1, =_early_heap_begin
+    ldr     x2, =_stack_end
+    mov     sp, x2
+    ldr     x30, =kernel_main
+    blr     x30
 in_el0:
     b       .
 
@@ -234,7 +242,7 @@ interrupt_entry:
 
     eret
 
-.balign 0x800
+.balign 0x1000
 vector_table_el1:
     b       exception_entry
     .balign 0x80
