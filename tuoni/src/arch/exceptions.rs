@@ -1,4 +1,5 @@
 #![no_std]
+use core::arch::asm;
 use core::fmt::Write;
 
 //use crate::drivers::*;
@@ -7,7 +8,7 @@ use core::fmt::Write;
 use crate::arch;
 use crate::drivers;
 
-const MMIO_BASE: *mut u32 = 0x0800_0000 as *mut u32;
+const MMIO_BASE: *mut u32 = 0xffff_0000_0800_0000 as *mut u32;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
@@ -43,7 +44,7 @@ pub extern "C" fn exception(frame: *mut InterruptFrame) {
     unsafe { safe_exception(&mut *frame) }
 }
 
-fn safe_exception(_frame: &mut InterruptFrame) {
+fn safe_exception(frame: &mut InterruptFrame) {
     let mut mmio = unsafe { arch::mmio::Mmio::new(MMIO_BASE) };
     let mut uart = unsafe { drivers::serial::Uart::new(mmio) };
 

@@ -15,12 +15,11 @@ SECTIONS
 
     HIDDEN(_offset = _kernel_begin - _boot_end);
     .text : AT(ADDR(.text) - _offset) {
-        *(.text.exception_table);
-        *(.text.*);
+        *(text .text.*);
     }
 
     .rodata ALIGN(4) : AT(ADDR(.rodata) - _offset) {
-        *(.srodata*);
+        *(.rodata*);
         . = ALIGN(4);
     }
 

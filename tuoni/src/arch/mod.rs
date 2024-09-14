@@ -1,2 +1,2 @@
-pub mod interrupt;
+pub mod exceptions;
 pub mod mmio;

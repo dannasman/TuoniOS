@@ -1,5 +1,5 @@
 [target.aarch64-unknown-none]
-rustflags = ["-C", "link-arg=-Tlinker.ld"]
+rustflags = ["-C", "link-arg=-Tlinker.ld", "-C", "target-cpu=cortex-a53"]
 
 [build]
 target = "aarch64-unknown-none"
