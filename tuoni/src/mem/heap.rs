@@ -5,7 +5,7 @@ type Next = Option<&'static mut HeapBlock>;
 struct HeapBlock {
     next: Next,
     size: usize,
-    free: usize
+    free: usize,
 }
 
 impl HeapBlock {
