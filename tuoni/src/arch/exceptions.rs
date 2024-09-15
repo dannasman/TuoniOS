@@ -1,5 +1,4 @@
 #![no_std]
-use core::arch::asm;
 use core::fmt::Write;
 
 //use crate::drivers::*;
