@@ -1,55 +1,71 @@
 use core::mem;
+use core::ptr::{NonNull, null_mut};
+use core::alloc::{GlobalAlloc, Layout};
 
-type Next = Option<&'static mut HeapBlock>;
+use crate::locking;
 
-struct HeapBlock {
-    next: Next,
+// TODO: Correctly handle alignments not power of two?
+fn align_down_size(size: usize, align: usize) -> usize {
+    if align == 0 { size } else { size & !(align - 1) }
+}
+
+fn align_up_size(size: usize, align: usize) -> usize {
+    align_down_size(size + align - 1, align)
+}
+
+pub fn align_up(addr: *mut u8, align: usize) -> *mut u8 {
+    let offset = addr.align_offset(align);
+    addr.wrapping_add(offset)
+}
+
+pub struct Heap {
+    base: *mut u8,
     size: usize,
-    free: usize,
-}
-
-impl HeapBlock {
-    pub fn empty() -> Self {
-        HeapBlock {
-            next: None,
-            size: 0,
-            free: 1,
-        }
-    }
-
-    fn new(base: usize, size: usize, next: Option<&'static mut HeapBlock>) -> &mut HeapBlock {
-        let p = base as *mut HeapBlock;
-        unsafe {
-            (*p).next = next;
-            (*p).size = size;
-            (*p).free = 0;
-            &mut *p
-        }
-    }
-
-    fn get_base(&self) -> usize {
-        self as *const Self as usize
-    }
-}
-
-struct Heap {
-    head: HeapBlock,
 }
 
 impl Heap {
-    pub fn new() -> Self {
-        Self {
-            head: HeapBlock::empty(),
+    pub const fn new() -> Heap {
+        Heap {
+            base: null_mut(),
+            size: 0
         }
     }
 
-    fn align_to(value: usize, align: usize) -> usize {
-        let m = align - 1;
-        (value + m) & !m
+    pub unsafe fn init(&mut self, base: *mut u8, size: usize) {
+        self.base = base;
+        self.size = size;
     }
 
-    pub unsafe fn init(&mut self, base: usize, size: usize) {
-        assert!(Heap::align_to(base, mem::align_of::<HeapBlock>()) == base);
-        self.head.next = Some(HeapBlock::new(base, size, None));
+    fn alloc(&mut self, layout: Layout) -> *mut u8 {
+        let size = layout.size();
+        let align = layout.align();
+
+        let start = align_up(self.base, align);
+        unsafe { self.base = self.base.wrapping_add(size) };
+        start
     }
+}
+
+unsafe impl Send for Heap {}
+unsafe impl Sync for Heap {}
+
+pub struct LockedHeap(locking::mutex::Mutex<Heap>);
+
+impl LockedHeap {
+    pub const fn new(heap: Heap) -> Self {
+        LockedHeap(locking::mutex::Mutex::new(heap))
+    }
+
+    pub fn lock(&self) -> locking::mutex::MutexGuard<Heap> {
+        self.0.lock()
+    }
+}
+
+unsafe impl GlobalAlloc for LockedHeap {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let mut heap = self.0.lock();
+        heap.alloc(layout)
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {}
 }
