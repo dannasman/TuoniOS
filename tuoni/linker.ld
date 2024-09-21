@@ -28,7 +28,7 @@ SECTIONS
         . = ALIGN(8);
     }
 
-    .bss ALIGN(4)  : AT(ADDR(.data) - _offset) {
+    .bss ALIGN(4)  : AT(ADDR(.bss) - _offset) {
         _bss_start = .;
         *(.bss .bss.*);
         . = ALIGN(4);

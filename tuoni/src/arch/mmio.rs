@@ -1,31 +1,53 @@
 use core::arch::asm;
+use core::ptr::null_mut;
+
+use crate::sync;
+
+static mut MMIO: sync::mutex::Mutex<Mmio> = sync::mutex::Mutex::new(Mmio::new());
 
 #[derive(Debug)]
 pub struct Mmio {
-    pub base: *mut u32,
+    pub base: *mut u8,
 }
 
 impl Mmio {
-    pub unsafe fn new(base: *mut u32) -> Self {
-        Mmio { base }
+    pub const fn new() -> Self {
+        Mmio { base: null_mut() }
+    }
+
+    pub fn init(&mut self, base: usize) {
+        self.base = base as *mut u8;
+    }
+
+    pub unsafe fn write(&self, offset: usize, data: u8) {
+        self.base.add(offset).write_volatile(data)
     }
 
     #[inline(always)]
-    pub unsafe fn write(&self, offset: usize, data: u32) {
-        self.base.byte_add(offset).write_volatile(data)
+    pub unsafe fn read(&self, offset: usize) -> u8 {
+        self.base.add(offset).read_volatile()
     }
+}
 
-    #[inline(always)]
-    pub unsafe fn read(&self, offset: usize) -> u32 {
-        self.base.byte_add(offset).read_volatile()
-    }
+pub fn init(base: usize) {
+    unsafe { MMIO.lock().init(base) }
+}
 
-    #[inline(always)]
-    pub fn delay(ticks: u32) {
-        for _ in 0..ticks {
-            unsafe {
-                asm!("nop");
-            }
+#[inline(always)]
+pub fn write(offset: usize, data: u8) {
+    unsafe { MMIO.lock().write(offset, data) }
+}
+
+#[inline(always)]
+pub fn read(offset: usize) -> u8 {
+    unsafe { MMIO.lock().read(offset) }
+}
+
+#[inline(always)]
+pub fn delay(ticks: usize) {
+    for _ in 0..ticks {
+        unsafe {
+            asm!("nop");
         }
     }
 }

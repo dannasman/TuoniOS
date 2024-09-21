@@ -7,7 +7,7 @@ use core::fmt::Write;
 use crate::arch;
 use crate::drivers;
 
-const MMIO_BASE: *mut u32 = 0xffff_0000_0800_0000 as *mut u32;
+const MMIO_BASE: *mut u8 = 0xffff_0000_0800_0000 as *mut u8;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
@@ -44,8 +44,7 @@ pub extern "C" fn exception(frame: *mut InterruptFrame) {
 }
 
 fn safe_exception(frame: &mut InterruptFrame) {
-    let mut mmio = unsafe { arch::mmio::Mmio::new(MMIO_BASE) };
-    let mut uart = unsafe { drivers::serial::Uart::new(mmio) };
+    let mut uart = unsafe { drivers::serial::Uart::new() };
 
     writeln!(uart, "Exception occured!").unwrap();
     writeln!(
@@ -90,8 +89,7 @@ pub extern "C" fn interrupt(frame: *mut InterruptFrame) {
 }
 
 fn safe_interrupt(frame: &mut InterruptFrame) {
-    let mut mmio = unsafe { arch::mmio::Mmio::new(MMIO_BASE) };
-    let mut uart = unsafe { drivers::serial::Uart::new(mmio) };
+    let mut uart = unsafe { drivers::serial::Uart::new() };
 
     writeln!(uart, "Interrupt occured!").unwrap();
     writeln!(

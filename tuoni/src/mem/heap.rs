@@ -36,6 +36,7 @@ impl Heap {
     }
 
     pub unsafe fn init(&mut self, base: usize, size: usize) {
+        assert_eq!(self.size, 0);
         self.base = base as *mut u8;
         self.size = size;
     }
@@ -49,7 +50,7 @@ impl Heap {
         let align = layout.align();
 
         let start = align_up(self.base, align);
-        unsafe { self.base = self.base.byte_add(size) };
+        unsafe { self.base = start.wrapping_add(size) };
         start
     }
 }
