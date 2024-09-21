@@ -2,7 +2,6 @@
 #![no_main]
 use core::alloc::Layout;
 use core::arch::global_asm;
-use core::fmt::Write;
 use core::mem::{align_of, size_of};
 use core::ptr::addr_of;
 

@@ -1,6 +1,6 @@
 use core::alloc::Layout;
 use core::mem;
-use core::ptr::{null_mut, NonNull};
+use core::ptr::null_mut;
 
 use crate::sync;
 

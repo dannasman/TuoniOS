@@ -1,14 +1,7 @@
 #![no_std]
 use core::fmt::Write;
 
-//use crate::drivers::*;
-//use crate::mmio::*;
-
-use crate::arch;
-use crate::drivers;
 use crate::log_write;
-
-const MMIO_BASE: *mut u8 = 0xffff_0000_0800_0000 as *mut u8;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
@@ -45,7 +38,6 @@ pub extern "C" fn exception(frame: *mut InterruptFrame) {
 }
 
 fn safe_exception(frame: &mut InterruptFrame) {
-
     log_write!("Exception occured!\n");
     log_write!(
         "Frame:\nx0={:<#16x}\tx1={:<#16x}\tx2={:<#16x}\tx3={:<#16x}\n\
