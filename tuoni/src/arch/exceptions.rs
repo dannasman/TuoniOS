@@ -6,6 +6,7 @@ use core::fmt::Write;
 
 use crate::arch;
 use crate::drivers;
+use crate::log_write;
 
 const MMIO_BASE: *mut u8 = 0xffff_0000_0800_0000 as *mut u8;
 
@@ -44,17 +45,15 @@ pub extern "C" fn exception(frame: *mut InterruptFrame) {
 }
 
 fn safe_exception(frame: &mut InterruptFrame) {
-    let mut uart = unsafe { drivers::serial::Uart::new() };
 
-    writeln!(uart, "Exception occured!").unwrap();
-    writeln!(
-        uart,
+    log_write!("Exception occured!\n");
+    log_write!(
         "Frame:\nx0={:<#16x}\tx1={:<#16x}\tx2={:<#16x}\tx3={:<#16x}\n\
         x4={:<#16x}\tx5={:<#16x}\tx6={:<#16x}\tx7={:<#16x}\n\
         x8={:<#16x}\tx9={:<#16x}\tx10={:<#16x}\tx11={:<#16x}\n\
         x12={:<#16x}\tx13={:<#16x}\tx14={:<#16x}\tx15={:<#16x}\n\
         x16={:<#16x}\tx17={:<#16x}\tx18={:<#16x}\nfp={:<#16x}\n\
-        lr={:<#16x}\nesr={:<#16x}\nfar={:<#16x}",
+        lr={:<#16x}\nesr={:<#16x}\nfar={:<#16x}\n",
         frame.x0,
         frame.x1,
         frame.x2,
@@ -78,8 +77,7 @@ fn safe_exception(frame: &mut InterruptFrame) {
         frame.lr,
         frame.esr,
         frame.far
-    )
-    .unwrap();
+    );
     loop {}
 }
 
@@ -89,17 +87,14 @@ pub extern "C" fn interrupt(frame: *mut InterruptFrame) {
 }
 
 fn safe_interrupt(frame: &mut InterruptFrame) {
-    let mut uart = unsafe { drivers::serial::Uart::new() };
-
-    writeln!(uart, "Interrupt occured!").unwrap();
-    writeln!(
-        uart,
+    log_write!("Interrupt occured!\n");
+    log_write!(
         "Frame:\nx0={:<#16x}\tx1={:<#16x}\tx2={:<#16x}\tx3={:<#16x}\n\
         x4={:<#16x}\tx5={:<#16x}\tx6={:<#16x}\tx7={:<#16x}\n\
         x8={:<#16x}\tx9={:<#16x}\tx10={:<#16x}\tx11={:<#16x}\n\
         x12={:<#16x}\tx13={:<#16x}\tx14={:<#16x}\tx15={:<#16x}\n\
         x16={:<#16x}\tx17={:<#16x}\tx18={:<#16x}\nfp={:<#16x}\n\
-        lr={:<#16x}\nesr={}\nfar={:<#16x}",
+        lr={:<#16x}\nesr={}\nfar={:<#16x}\n",
         frame.x0,
         frame.x1,
         frame.x2,
@@ -123,7 +118,6 @@ fn safe_interrupt(frame: &mut InterruptFrame) {
         frame.lr,
         frame.esr,
         frame.far
-    )
-    .unwrap();
+    );
     loop {}
 }
