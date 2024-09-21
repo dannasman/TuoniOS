@@ -1,12 +1,16 @@
+use core::alloc::Layout;
 use core::mem;
-use core::ptr::{NonNull, null_mut};
-use core::alloc::{GlobalAlloc, Layout};
+use core::ptr::{null_mut, NonNull};
 
-use crate::locking;
+use crate::sync;
 
 // TODO: Correctly handle alignments not power of two?
 fn align_down_size(size: usize, align: usize) -> usize {
-    if align == 0 { size } else { size & !(align - 1) }
+    if align == 0 {
+        size
+    } else {
+        size & !(align - 1)
+    }
 }
 
 fn align_up_size(size: usize, align: usize) -> usize {
@@ -27,21 +31,25 @@ impl Heap {
     pub const fn new() -> Heap {
         Heap {
             base: null_mut(),
-            size: 0
+            size: 0,
         }
     }
 
-    pub unsafe fn init(&mut self, base: *mut u8, size: usize) {
-        self.base = base;
+    pub unsafe fn init(&mut self, base: usize, size: usize) {
+        self.base = base as *mut u8;
         self.size = size;
     }
 
-    fn alloc(&mut self, layout: Layout) -> *mut u8 {
+    pub fn base(&self) -> usize {
+        self.base as usize
+    }
+
+    pub fn alloc(&mut self, layout: Layout) -> *mut u8 {
         let size = layout.size();
         let align = layout.align();
 
         let start = align_up(self.base, align);
-        unsafe { self.base = self.base.wrapping_add(size) };
+        unsafe { self.base = self.base.byte_add(size) };
         start
     }
 }
@@ -49,23 +57,14 @@ impl Heap {
 unsafe impl Send for Heap {}
 unsafe impl Sync for Heap {}
 
-pub struct LockedHeap(locking::mutex::Mutex<Heap>);
+pub struct LockedHeap(sync::mutex::Mutex<Heap>);
 
 impl LockedHeap {
     pub const fn new(heap: Heap) -> Self {
-        LockedHeap(locking::mutex::Mutex::new(heap))
+        LockedHeap(sync::mutex::Mutex::new(heap))
     }
 
-    pub fn lock(&self) -> locking::mutex::MutexGuard<Heap> {
+    pub fn lock(&self) -> sync::mutex::MutexGuard<Heap> {
         self.0.lock()
     }
-}
-
-unsafe impl GlobalAlloc for LockedHeap {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let mut heap = self.0.lock();
-        heap.alloc(layout)
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {}
 }

@@ -108,8 +108,10 @@ in_el1:
 
     ldr     x0, =_kernel_begin
     ldr     x1, =_early_heap_begin
-    ldr     x2, =_stack_end
-    mov     sp, x2
+    ldr     x2, =_early_heap_end
+    ldr     x3, =_stack_begin
+    ldr     x4, =_stack_end
+    mov     sp, x4
     ldr     x30, =kernel_main
     blr     x30
 in_el0:
