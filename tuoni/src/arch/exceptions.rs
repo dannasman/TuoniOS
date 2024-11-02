@@ -40,12 +40,30 @@ pub extern "C" fn exception(frame: *mut InterruptFrame) {
 fn safe_exception(frame: &mut InterruptFrame) {
     log_write!("Exception occured!\n");
     log_write!(
-        "Frame:\nx0={:<#16x}\tx1={:<#16x}\tx2={:<#16x}\tx3={:<#16x}\n\
-        x4={:<#16x}\tx5={:<#16x}\tx6={:<#16x}\tx7={:<#16x}\n\
-        x8={:<#16x}\tx9={:<#16x}\tx10={:<#16x}\tx11={:<#16x}\n\
-        x12={:<#16x}\tx13={:<#16x}\tx14={:<#16x}\tx15={:<#16x}\n\
-        x16={:<#16x}\tx17={:<#16x}\tx18={:<#16x}\nfp={:<#16x}\n\
-        lr={:<#16x}\nesr={:<#16x}\nfar={:<#16x}\n",
+        "Frame:\n\
+        x0={:<#16x}\n\
+        x1={:<#16x}\n\
+        x2={:<#16x}\n\
+        x3={:<#16x}\n\
+        x4={:<#16x}\n\
+        x5={:<#16x}\n\
+        x6={:<#16x}\n\
+        x7={:<#16x}\n\
+        x8={:<#16x}\n\
+        x9={:<#16x}\n\
+        x10={:<#16x}\n\
+        x11={:<#16x}\n\
+        x12={:<#16x}\n\
+        x13={:<#16x}\n\
+        x14={:<#16x}\n\
+        x15={:<#16x}\n\
+        x16={:<#16x}\n\
+        x17={:<#16x}\n\
+        x18={:<#16x}\n\
+        fp={:<#16x}\n\
+        lr={:<#16x}\n\
+        esr={:<#16x}\n\
+        far={:<#16x}\n",
         frame.x0,
         frame.x1,
         frame.x2,
@@ -81,12 +99,30 @@ pub extern "C" fn interrupt(frame: *mut InterruptFrame) {
 fn safe_interrupt(frame: &mut InterruptFrame) {
     log_write!("Interrupt occured!\n");
     log_write!(
-        "Frame:\nx0={:<#16x}\tx1={:<#16x}\tx2={:<#16x}\tx3={:<#16x}\n\
-        x4={:<#16x}\tx5={:<#16x}\tx6={:<#16x}\tx7={:<#16x}\n\
-        x8={:<#16x}\tx9={:<#16x}\tx10={:<#16x}\tx11={:<#16x}\n\
-        x12={:<#16x}\tx13={:<#16x}\tx14={:<#16x}\tx15={:<#16x}\n\
-        x16={:<#16x}\tx17={:<#16x}\tx18={:<#16x}\nfp={:<#16x}\n\
-        lr={:<#16x}\nesr={}\nfar={:<#16x}\n",
+        "Frame:\n\
+        x0={:<#16x}\n\
+        x1={:<#16x}\n\
+        x2={:<#16x}\n\
+        x3={:<#16x}\n\
+        x4={:<#16x}\n\
+        5={:<#16x}\n\
+        x6={:<#16x}\n\
+        x7={:<#16x}\n\
+        x8={:<#16x}\n\
+        x9={:<#16x}\n\
+        x10={:<#16x}\n\
+        x11={:<#16x}\n\
+        x12={:<#16x}\n\
+        x13={:<#16x}\n\
+        x14={:<#16x}\n\
+        x15={:<#16x}\n\
+        x16={:<#16x}\n\
+        x17={:<#16x}\n\
+        x18={:<#16x}\n\
+        fp={:<#16x}\n\
+        lr={:<#16x}\n\
+        esr={}\n\
+        far={:<#16x}\n",
         frame.x0,
         frame.x1,
         frame.x2,
