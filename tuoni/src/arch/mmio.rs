@@ -52,6 +52,7 @@ pub fn delay(ticks: usize) {
     }
 }
 
+#[allow(non_camel_case_types)]
 pub enum Offset {
     UART0_BASE = 0x0100_0000,
     UART0_RSRECR = 0x0100_0000 + 0x04,

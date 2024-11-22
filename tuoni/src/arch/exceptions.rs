@@ -1,6 +1,3 @@
-#![no_std]
-use core::fmt::Write;
-
 use crate::log_write;
 
 #[derive(Copy, Clone, Debug)]

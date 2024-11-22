@@ -28,13 +28,13 @@ impl PoolNode {
 }
 
 pub struct Allocator {
-    head: PoolNode
+    head: PoolNode,
 }
 
 impl Allocator {
     pub const fn new() -> Self {
         Self {
-            head: PoolNode::new(0)
+            head: PoolNode::new(0),
         }
     }
 
@@ -87,7 +87,10 @@ impl Allocator {
     }
 
     fn size_align(layout: Layout) -> (usize, usize) {
-        let layout = layout.align_to(mem::align_of::<PoolNode>()).expect("adjusting alignment failed").pad_to_align();
+        let layout = layout
+            .align_to(mem::align_of::<PoolNode>())
+            .expect("adjusting alignment failed")
+            .pad_to_align();
         let size = layout.size().max(mem::size_of::<PoolNode>());
         (size, layout.align())
     }

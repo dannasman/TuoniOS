@@ -1,14 +1,10 @@
 #![no_std]
 #![no_main]
 #![feature(const_mut_refs)]
-#![feature(alloc)]
-extern crate alloc;
-use alloc::{vec, vec::Vec};
 
-use core::alloc::Layout;
 use core::arch::global_asm;
-use core::mem::{align_of, size_of};
-use core::ptr::addr_of;
+
+extern crate alloc;
 
 pub mod allocator;
 pub mod arch;

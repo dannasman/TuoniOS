@@ -1,7 +1,8 @@
 use core::cell::UnsafeCell;
+use core::hint::spin_loop as cpu_relax;
 use core::marker::Sync;
 use core::ops::{Deref, DerefMut};
-use core::sync::atomic::{spin_loop_hint as cpu_relax, AtomicBool, Ordering};
+use core::sync::atomic::{AtomicBool, Ordering};
 
 // Taken from spin crate: https://docs.rs/spin/0.5.2/spin/index.html
 
