@@ -46,6 +46,26 @@ impl Allocator {
         assert_eq!(align_up(addr, mem::align_of::<PoolNode>()), addr);
         assert!(size >= mem::size_of::<PoolNode>());
 
+        let end_addr = align_up(addr + size, mem::align_of::<PoolNode>());
+
+        let mut current = &mut self.head;
+
+        while let Some(ref mut region) = current.next {
+            let region_end_addr = align_up(region.end_addr(), mem::align_of::<PoolNode>());
+            if addr == region_end_addr {
+                region.size = addr + size - region.start_addr();
+                return;
+            } else if end_addr == region.start_addr() {
+                let mut node = PoolNode::new(region.end_addr() - addr);
+                node.next = region.next.take();
+                let node_ptr = addr as *mut PoolNode;
+                node_ptr.write(node);
+                current.next = Some(&mut *node_ptr);
+                return;
+            }
+            current = current.next.as_mut().unwrap();
+        }
+
         let mut node = PoolNode::new(size);
         node.next = self.head.next.take();
         let node_ptr = addr as *mut PoolNode;
@@ -103,7 +123,7 @@ unsafe impl GlobalAlloc for LockedHeap<Allocator> {
 
         if let Some((region, alloc_start)) = allocator.find_region(size, align) {
             let alloc_end = alloc_start.checked_add(size).expect("overflow");
-            let excess_size = region.start_addr() - alloc_end;
+            let excess_size = region.end_addr() - alloc_end;
             if excess_size > 0 {
                 allocator.add_free_region(alloc_end, excess_size);
             }
