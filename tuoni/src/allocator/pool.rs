@@ -6,7 +6,7 @@ use core::ptr;
 use crate::log_write;
 
 /*
- * This allocator implementation is originally from
+ * This allocator is built on the implementation from
  * https://os.phil-opp.com/allocator-designs/#linked-list-allocator
  * */
 
