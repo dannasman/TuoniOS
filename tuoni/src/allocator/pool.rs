@@ -13,16 +13,11 @@ use crate::log_write;
 struct PoolNode {
     size: usize,
     next: Option<&'static mut PoolNode>,
-    prev: Option<&'static mut PoolNode>,
 }
 
 impl PoolNode {
     const fn new(size: usize) -> Self {
-        PoolNode {
-            size,
-            next: None,
-            prev: None,
-        }
+        PoolNode { size, next: None }
     }
 
     fn start_addr(&self) -> usize {
@@ -54,89 +49,82 @@ impl Allocator {
         assert!(size >= mem::size_of::<PoolNode>());
 
         let mut current = &mut self.head;
+        let mut prev: Option<&'static mut PoolNode> = None;
 
-        while let Some(ref mut region) = current.next {
-            if addr < region.start_addr() {
-                let diff_up = region.start_addr() - addr - size;
+        while let Some(ref mut region_upper) = current.next {
+            let region_upper_ptr = region_upper.start_addr() as *mut PoolNode;
+            if addr < region_upper.start_addr() {
+                let diff_upper = region_upper.start_addr() - addr - size;
+                if let Some(ref mut region_lower) = prev {
+                    let diff_lower = addr - region_lower.end_addr();
 
-                if let Some(ref mut prev) = region.prev.take() {
-                    let prev_ptr = prev.start_addr() as *mut PoolNode;
-                    let diff_low = addr - prev.end_addr();
-                    if diff_low < mem::size_of::<PoolNode>() && diff_up < mem::size_of::<PoolNode>()
+                    if diff_upper < mem::size_of::<PoolNode>()
+                        && diff_lower < mem::size_of::<PoolNode>()
                     {
-                        prev.size = region.end_addr() - prev.start_addr();
-                        prev.next = region.next.take();
-                    } else if diff_low < mem::size_of::<PoolNode>() {
-                        prev.size = addr + size - prev.start_addr();
-                        region.prev = Some(&mut *prev_ptr);
-                    } else if diff_up < mem::size_of::<PoolNode>() {
-                        let mut node = PoolNode::new(region.end_addr() - addr);
-                        let mut next = region.next.take();
-                        
+                        let next = region_upper.next.take();
+
+                        region_lower.size = region_upper.end_addr() - region_lower.start_addr();
+                        region_lower.next = next;
+                    } else if diff_upper < mem::size_of::<PoolNode>() {
+                        let next = region_upper.next.take();
+
+                        let mut node = PoolNode::new(region_upper.end_addr() - addr);
+                        node.next = next;
+
                         let node_ptr = addr as *mut PoolNode;
-
-                        if let Some(ref mut n) = next {
-                            n.prev = Some(&mut *node_ptr);
-                            let next_ptr = n.start_addr() as *mut PoolNode;
-                            node.next = Some(&mut *next_ptr);
-                        }
-
-                        node.prev = Some(&mut *prev_ptr);
                         node_ptr.write(node);
-                        prev.next = Some(&mut *node_ptr);
+
+                        region_lower.next = Some(&mut *node_ptr);
+                    } else if diff_lower < mem::size_of::<PoolNode>() {
+                        region_lower.size = addr + size - region_lower.start_addr();
                     } else {
                         let mut node = PoolNode::new(size);
+                        node.next = Some(&mut *region_upper_ptr);
 
                         let node_ptr = addr as *mut PoolNode;
-                        let next_ptr = region.start_addr() as *mut PoolNode;
-                        
-                        node.next = Some(&mut *next_ptr);
-                        node.prev = Some(&mut *prev_ptr);
-
                         node_ptr.write(node);
 
-                        prev.next = Some(&mut *node_ptr);
-                        region.prev = Some(&mut *node_ptr);
+                        region_lower.next = Some(&mut *node_ptr);
                     }
-                } else if diff_up < mem::size_of::<PoolNode>() {
-                    let mut node = PoolNode::new(region.end_addr() - addr);
-                    let mut next = region.next.take();
+                } else if diff_upper < mem::size_of::<PoolNode>() {
+                    let next = region_upper.next.take();
+
+                    let mut node = PoolNode::new(region_upper.end_addr() - addr);
+                    node.next = next;
 
                     let node_ptr = addr as *mut PoolNode;
-
-                    if let Some(ref mut n) = next {
-                        n.prev = Some(&mut *node_ptr);
-                        let next_ptr = n.start_addr() as *mut PoolNode;
-                        node.next = Some(&mut *next_ptr);
-                    }
+                    node_ptr.write(node);
 
                     current.next = Some(&mut *node_ptr);
                 } else {
                     let mut node = PoolNode::new(size);
+                    node.next = Some(&mut *region_upper_ptr);
 
                     let node_ptr = addr as *mut PoolNode;
-                    let next_ptr = region.start_addr() as *mut PoolNode;
-
-                    region.prev = Some(&mut *node_ptr);
-                    node.next = Some(&mut *next_ptr);
                     node_ptr.write(node);
+
                     current.next = Some(&mut *node_ptr);
                 }
                 return;
             } else {
                 current = current.next.as_mut().unwrap();
+                prev = Some(&mut *region_upper_ptr);
+            }
+        }
+
+        if let Some(region_lower) = prev {
+            let diff_lower = addr - region_lower.end_addr();
+            if diff_lower < mem::size_of::<PoolNode>() {
+                region_lower.size = addr + size - region_lower.start_addr();
+                return;
             }
         }
 
         let mut node = PoolNode::new(size);
+        node.next = current.next.take();
         let node_ptr = addr as *mut PoolNode;
-        let cur_ptr = current.start_addr() as *mut PoolNode;
-        node.next = None;
-        if current.size != 0 {
-            node.prev = Some(&mut *cur_ptr);
-        }
         node_ptr.write(node);
-        current.next = Some(&mut *node_ptr);
+        current.next = Some(&mut *node_ptr)
     }
 
     fn find_region(&mut self, size: usize, align: usize) -> Option<(&'static mut PoolNode, usize)> {
