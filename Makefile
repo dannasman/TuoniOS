@@ -7,9 +7,6 @@ qemuflags := -machine virt -m 2G -cpu cortex-a72 -nographic -s
 
 all: kernel-release
 
-clean:
-	cd tuoni && cargo clean && cargo fmt
-
 run: kernel-release
 	cd tuoni && $(qemu) $(qemuflags) -kernel target/$(target)/release/$(kernel)
 
@@ -22,5 +19,14 @@ kernel-release:
 kernel-debug:
 	cd tuoni && cargo build
 
-type-sizes:
+kernel-objs:
+	cd tuoni && cargo rustc -- --emit=obj
+
+kernel-asm:
+	cd tuoni && cargo rustc --release -- --emit=asm
+
+kernel-type-sizes: clean
 	cd tuoni && cargo rustc -- -Zprint-type-sizes
+
+clean:
+	cd tuoni && cargo clean && cargo fmt
