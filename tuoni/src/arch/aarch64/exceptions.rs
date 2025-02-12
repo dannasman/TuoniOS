@@ -1,4 +1,8 @@
+use core::arch::global_asm;
+
 use crate::log_write;
+
+global_asm!(include_str!("exceptions.s"));
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]

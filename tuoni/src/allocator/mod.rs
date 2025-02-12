@@ -27,8 +27,12 @@ impl<T> LockedHeap<T> {
 }
 
 #[global_allocator]
-static ALLOCATOR: LockedHeap<Allocator> = LockedHeap::new(Allocator::new());
+pub static ALLOCATOR: LockedHeap<Allocator> = LockedHeap::new(Allocator::new());
 
 pub fn init(base: usize, size: usize) {
     unsafe { ALLOCATOR.lock().init(base, size) }
+}
+
+pub fn display() {
+    ALLOCATOR.lock().display()
 }

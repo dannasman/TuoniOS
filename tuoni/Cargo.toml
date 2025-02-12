@@ -10,3 +10,4 @@ opt-level = 3
 
 [features]
 bump = []
+raspi4b = []

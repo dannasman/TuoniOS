@@ -2,26 +2,27 @@
 #![no_main]
 #![feature(const_mut_refs)]
 
-use core::arch::global_asm;
-
-extern crate alloc;
-
-pub mod allocator;
-pub mod arch;
-pub mod drivers;
-pub mod log;
+mod allocator;
+mod bsp;
+mod cpu;
+mod drivers;
+mod exceptions;
+mod log;
 //pub mod mem;
-pub mod panic;
-pub mod sync;
-
-global_asm!(include_str!("boot.s"));
+mod panic;
+mod sync;
 
 const HEAP_SIZE: usize = 0x100000;
-const MMIO_BASE: usize = 0xffff_0000_0800_0000;
+
+#[cfg(feature = "raspi4b")]
+const MMIO_BASE: usize = 0xFE00_0000;
+
+#[cfg(not(feature = "raspi4b"))]
+const MMIO_BASE: usize = 0x0800_0000;
 
 #[no_mangle]
 pub extern "C" fn kernel_main(x0: u64, x1: u64, x2: u64, x3: u64, x4: u64) -> ! {
-    arch::mmio::init(MMIO_BASE);
+    bsp::mmio::init(MMIO_BASE);
     log_write!("mmio initialized\n");
 
     log_write!("Welcome to TuoniOS!\n");

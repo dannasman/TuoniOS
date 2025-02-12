@@ -1,11 +1,14 @@
 ENTRY(_start)
+
+_peripherals_begin = 0xc0000000;
+
 SECTIONS
 {
-    . = 0x40080000;
+    . = 0x80000;
 
     .physical_boot.text : {
         _boot_start = .;
-        *(.init)
+        *(.init .init.*);
         _boot_end = ABSOLUTE(.);
     }
 
