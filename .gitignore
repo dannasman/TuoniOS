@@ -1,3 +1,6 @@
+target
 tuoni/target
+*.img
 *.swp
 *.xopp
+*.lock

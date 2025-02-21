@@ -7,7 +7,3 @@ edition = "2021"
 
 [profile.dev]
 opt-level = 3
-
-[features]
-bump = []
-raspi4b = []
