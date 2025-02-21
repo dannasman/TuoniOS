@@ -1,10 +1,10 @@
-use core::arch::asm;
 use core::ptr::null_mut;
 
 use crate::sync;
 
 static mut MMIO: sync::mutex::Mutex<Mmio> = sync::mutex::Mutex::new(Mmio::new());
 
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 pub enum Offset {
     UART0_BASE = 0x0100_0000,
@@ -75,13 +75,4 @@ pub fn write(offset: usize, data: u8) {
 #[inline(always)]
 pub fn read(offset: usize) -> u8 {
     unsafe { MMIO.lock().read(offset) }
-}
-
-#[inline(always)]
-pub fn delay(ticks: usize) {
-    for _ in 0..ticks {
-        unsafe {
-            asm!("nop");
-        }
-    }
 }

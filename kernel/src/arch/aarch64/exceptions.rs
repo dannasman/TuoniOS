@@ -35,10 +35,6 @@ pub struct InterruptFrame {
 
 #[no_mangle]
 pub extern "C" fn exception(frame: &mut InterruptFrame) {
-    unsafe { safe_exception(frame) }
-}
-
-fn safe_exception(frame: &mut InterruptFrame) {
     log_write!("Exception occured!\n");
     log_write!(
         "Frame:\n\
@@ -94,10 +90,6 @@ fn safe_exception(frame: &mut InterruptFrame) {
 
 #[no_mangle]
 pub extern "C" fn interrupt(frame: &mut InterruptFrame) {
-    unsafe { safe_interrupt(frame) }
-}
-
-fn safe_interrupt(frame: &mut InterruptFrame) {
     log_write!("Interrupt occured!\n");
     log_write!(
         "Frame:\n\

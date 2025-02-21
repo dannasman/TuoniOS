@@ -5,6 +5,7 @@ use crate::sync;
 
 static mut MMIO: sync::mutex::Mutex<Mmio> = sync::mutex::Mutex::new(Mmio::new());
 
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 pub enum Offset {
     GPIO_BASE = 0x200000,
@@ -89,6 +90,7 @@ pub fn read(offset: usize) -> u8 {
     unsafe { MMIO.lock().read(offset) }
 }
 
+#[allow(dead_code)]
 #[inline(always)]
 pub fn delay(ticks: usize) {
     for _ in 0..ticks {

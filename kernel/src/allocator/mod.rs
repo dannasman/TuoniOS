@@ -33,6 +33,7 @@ pub fn init(base: usize, size: usize) {
     unsafe { ALLOCATOR.lock().init(base, size) }
 }
 
+#[allow(dead_code)]
 pub fn display() {
     ALLOCATOR.lock().display()
 }

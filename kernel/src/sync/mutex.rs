@@ -1,6 +1,5 @@
 use core::cell::UnsafeCell;
 use core::hint::spin_loop as cpu_relax;
-use core::marker::Sync;
 use core::ops::{Deref, DerefMut};
 use core::sync::atomic::{AtomicBool, Ordering};
 
@@ -27,6 +26,7 @@ impl<T> Mutex<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn into_inner(self) -> T {
         let Mutex { data, .. } = self;
         data.into_inner()
