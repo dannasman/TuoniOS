@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::drivers::serial;
+use crate::bsp::drivers::serial;
 use crate::sync;
 
 static mut UART: sync::mutex::Mutex<serial::Uart> = sync::mutex::Mutex::new(serial::Uart::new());

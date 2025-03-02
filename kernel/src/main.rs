@@ -5,7 +5,6 @@
 mod allocator;
 mod bsp;
 mod cpu;
-mod drivers;
 mod exceptions;
 mod log;
 //pub mod mem;
@@ -22,7 +21,7 @@ const MMIO_BASE: usize = 0x0800_0000;
 
 #[no_mangle]
 pub extern "C" fn kernel_main(x0: u64, x1: u64, x2: u64, x3: u64, x4: u64) -> ! {
-    bsp::mmio::init(MMIO_BASE);
+    bsp::drivers::mmio::init(MMIO_BASE);
     log_write!("mmio initialized\n");
 
     log_write!("Welcome to TuoniOS!\n");
