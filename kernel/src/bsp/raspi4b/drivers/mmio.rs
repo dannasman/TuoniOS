@@ -64,21 +64,23 @@ impl Mmio {
         self.map_pl011_uart();
     }
 
+    #[inline(always)]
     pub unsafe fn write<T>(&self, offset: usize, data: T) {
         let b = self.base.add(offset) as *mut T;
         b.write_volatile(data)
     }
 
     #[inline(always)]
-    pub unsafe fn read(&self, offset: usize) -> u8 {
-        self.base.add(offset).read_volatile()
+    pub unsafe fn read<T>(&self, offset: usize) -> T {
+        let b = self.base.add(offset) as *mut T;
+        b.read_volatile()
     }
 
     // TODO
     pub fn map_pl011_uart(&mut self) {
         unsafe { self.write(Offset::UART0_CR as usize, 0x0) }
 
-        unsafe {self.write(Offset::GPPUD as usize, 0x0) }
+        unsafe { self.write(Offset::GPPUD as usize, 0x0) }
         delay(150);
 
         unsafe { self.write(Offset::GPPUDCLK0 as usize, (1 << 14) | (1 << 15)) }
@@ -94,12 +96,12 @@ pub fn init(base: usize) {
 }
 
 #[inline(always)]
-pub fn write(offset: usize, data: u8) {
+pub fn write<T>(offset: usize, data: T) {
     unsafe { MMIO.lock().write(offset, data) }
 }
 
 #[inline(always)]
-pub fn read(offset: usize) -> u8 {
+pub fn read<T>(offset: usize) -> T {
     unsafe { MMIO.lock().read(offset) }
 }
 

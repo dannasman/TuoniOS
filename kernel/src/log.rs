@@ -32,6 +32,10 @@ fn log() -> impl fmt::Write {
     Log {}
 }
 
+pub fn init() {
+    unsafe { UART.lock().init() }
+}
+
 pub fn write_fmt(args: fmt::Arguments) {
     use core::fmt::Write;
     log().write_fmt(args).unwrap();

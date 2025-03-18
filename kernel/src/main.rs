@@ -22,6 +22,10 @@ const MMIO_BASE: usize = 0x0800_0000;
 #[no_mangle]
 pub extern "C" fn kernel_main(x0: u64, x1: u64, x2: u64, x3: u64, x4: u64) -> ! {
     bsp::drivers::mmio::init(MMIO_BASE);
+
+    #[cfg(feature = "raspi4b")]
+    log::init();
+
     log_write!("mmio initialized\n");
 
     log_write!("Welcome to TuoniOS!\n");
