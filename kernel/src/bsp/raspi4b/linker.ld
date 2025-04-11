@@ -1,10 +1,10 @@
 ENTRY(_start)
 
-_peripherals_begin = 0xc0000000;
+_peripherals_begin = 0xfe000000;
 
 SECTIONS
 {
-    . = 0x80000;
+    . = 0x200000;
 
     .physical_boot.text : {
         _boot_start = .;

@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::drivers::serial;
+use crate::bsp::drivers::serial;
 use crate::sync;
 
 static mut UART: sync::mutex::Mutex<serial::Uart> = sync::mutex::Mutex::new(serial::Uart::new());
@@ -30,6 +30,11 @@ impl fmt::Write for Log {
 
 fn log() -> impl fmt::Write {
     Log {}
+}
+
+#[cfg(feature = "raspi4b")]
+pub fn init() {
+    unsafe { UART.lock().init() }
 }
 
 pub fn write_fmt(args: fmt::Arguments) {

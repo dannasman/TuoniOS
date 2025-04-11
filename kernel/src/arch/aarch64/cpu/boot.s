@@ -15,6 +15,7 @@ _start:
 1:
     msr     spsel, 1
     mrs     x0, CurrentEL
+    and     x0, x0, 0b1100
     cmp     x0, 0b0100
     beq     in_el1
     blo     in_el0
@@ -98,12 +99,13 @@ in_el1:
     msr     ttbr1_el1, x0
     isb
 
-    ldr     x30, =_stack_end
-    mov     sp, x30
+    ldr     x0, =_stack_end
+    mov     sp, x0
 
     mrs     x0, sctlr_el1
-    orr     x0, x0, 0x1
-    orr     x0, x0, (0x1 << 12)
+    orr     x0, x0, (1 << 0)
+    orr     x0, x0, (1 << 2)
+    orr     x0, x0, (1 << 12)
     msr     sctlr_el1, x0
     isb
 

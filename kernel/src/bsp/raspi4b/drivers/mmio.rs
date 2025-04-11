@@ -9,6 +9,8 @@ static mut MMIO: sync::mutex::Mutex<Mmio> = sync::mutex::Mutex::new(Mmio::new())
 #[allow(non_camel_case_types)]
 pub enum Offset {
     GPIO_BASE = 0x200000,
+    GPFSEL1 = 0x200000 + 0x04,
+    GPIO_PUP_PDN_CNTRL_REG0 = 0x200000 + 0xE4,
     GPPUD = 0x200000 + 0x94,
     GPPUDCLK0 = 0x200000 + 0x98,
 
@@ -60,19 +62,35 @@ impl Mmio {
 
     pub fn init(&mut self, base: usize) {
         self.base = base as *mut u8;
-    }
 
-    pub unsafe fn write(&self, offset: usize, data: u8) {
-        self.base.add(offset).write_volatile(data)
+        self.map_pl011_uart();
     }
 
     #[inline(always)]
-    pub unsafe fn read(&self, offset: usize) -> u8 {
-        self.base.add(offset).read_volatile()
+    pub unsafe fn write<T>(&self, offset: usize, data: T) {
+        let b = self.base.add(offset) as *mut T;
+        b.write_volatile(data)
     }
 
-    // TODO
-    pub unsafe fn map_pl011_uart(&mut self) {}
+    #[inline(always)]
+    pub unsafe fn read<T>(&self, offset: usize) -> T {
+        let b = self.base.add(offset) as *mut T;
+        b.read_volatile()
+    }
+
+    pub fn map_pl011_uart(&mut self) {
+        let mut r: u32 = unsafe { self.read::<u32>(Offset::GPFSEL1 as usize) };
+        r = (r | (1 << 17) | (1 << 14)) & !(0b11 << 15) & !(0b11 << 12);
+
+        unsafe { self.write(Offset::GPFSEL1 as usize, r) };
+
+        unsafe {
+            self.write(
+                Offset::GPIO_PUP_PDN_CNTRL_REG0 as usize,
+                ((0b01 << 30) | (0b01 << 28)) as u32,
+            )
+        };
+    }
 }
 
 pub fn init(base: usize) {
@@ -81,12 +99,12 @@ pub fn init(base: usize) {
 }
 
 #[inline(always)]
-pub fn write(offset: usize, data: u8) {
+pub fn write<T>(offset: usize, data: T) {
     unsafe { MMIO.lock().write(offset, data) }
 }
 
 #[inline(always)]
-pub fn read(offset: usize) -> u8 {
+pub fn read<T>(offset: usize) -> T {
     unsafe { MMIO.lock().read(offset) }
 }
 
