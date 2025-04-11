@@ -32,6 +32,7 @@ fn log() -> impl fmt::Write {
     Log {}
 }
 
+#[cfg(feature = "raspi4b")]
 pub fn init() {
     unsafe { UART.lock().init() }
 }

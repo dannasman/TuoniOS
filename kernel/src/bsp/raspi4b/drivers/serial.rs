@@ -13,31 +13,39 @@ impl Uart {
         Self {}
     }
 
-    // We require 115200 baud rate and UARTCLK is set to 3 MHz in config.txt
-    // Baud Rate divisor: 3000000/(16*115200)=1.6276041666666667.
-    // Integer part: 1
-    // Float part: 0.6276041666666667
-    // Fractional part m: int((0.6276041666666667*64)+0.5)=40
-    // Generated baud rate divider: 1+40/64=1.625
-    // Generated baud rate: 3000000/(16*1.625)=115385
-    // Error: (115385-115200)/115200=0.00161=0.161%
+    // We require 115_200 baud rate and UARTCLK is set to 48 MHz in config.txt
+    // Baud Rate divisor: 48_000_000/(16*115_200)=26.041667.
+    // Integer part: 26
+    // Fractional part: 0.041667
+    // Fractional part m: int((0.041667*64)+0.5)=3
+    // Generated baud rate divider: 3+16/64=26.046875
+    // Generated baud rate: 48_000_000/(16*26.046875)=115_176
+    // Error: (115_176-115_200)/115_200=0.021%
     pub fn init(&mut self) {
-        mmio::write(mmio::Offset::UART0_CR as usize, 0);
+        self.flush();
 
-        let icr_val: u16 = mmio::read(mmio::Offset::UART0_ICR as usize);
-        mmio::write(mmio::Offset::UART0_ICR as usize, icr_val & 0xf800);
+        mmio::write(mmio::Offset::UART0_CR as usize, 0 as u16);
 
-        mmio::write(mmio::Offset::UART0_IBRD as usize, 1u8);
+        let icr_val: u16 = mmio::read::<u16>(mmio::Offset::UART0_ICR as usize);
+        mmio::write(mmio::Offset::UART0_ICR as usize, icr_val & 0xf800u16);
 
-        mmio::write(mmio::Offset::UART0_FBRD as usize, 40u8);
+        mmio::write(mmio::Offset::UART0_IBRD as usize, 26u16);
 
-        mmio::write(mmio::Offset::UART0_LCRH as usize, ((1 << 4) | (1 << 5) | (1 << 6)) as u8);
+        mmio::write(mmio::Offset::UART0_FBRD as usize, 3u8);
 
-        mmio::write(mmio::Offset::UART0_IMSC as usize, ((1 << 1) | (1 << 4) | (1 << 5) | (1 << 5) |
-                                               (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10)) as u16);
+        mmio::write(
+            mmio::Offset::UART0_LCRH as usize,
+            ((1 << 4) | (1 << 5) | (1 << 6)) as u8,
+        );
 
-        mmio::write(mmio::Offset::UART0_CR as usize, 1 | (1 << 8) | (9 << 1));
+        mmio::write(
+            mmio::Offset::UART0_CR as usize,
+            ((1 << 0) | (1 << 8) | (1 << 9)) as u32,
+        );
+    }
 
+    fn flush(&self) {
+        while mmio::read::<u8>(mmio::Offset::UART0_FR as usize) & FR_BUSY != 0 {}
     }
 
     #[inline(always)]

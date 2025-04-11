@@ -5,7 +5,7 @@ machine			:= virt
 kernel_manifest := kernel/Cargo.toml
 
 ifeq ($(machine), raspi4b)
-qemuflags	:= -machine raspi4b -nographic -s
+qemuflags	:= -machine raspi4b -m 2G -nographic -s
 rustflags	:= -C link-arg=-Tkernel/src/bsp/raspi4b/linker.ld -C target-cpu=cortex-a72
 features	:= --features=raspi4b
 else
@@ -39,7 +39,7 @@ kernel-type-sizes: clean
 	RUSTFLAGS="$(rustflags)" cargo rustc --manifest-path $(kernel_manifest) $(features) -- -Zprint-type-sizes
 
 kernel-image: kernel-release
-	rust-objcopy target/$(target)/release/$(kernel) -O binary kernel8.img
+	rust-objcopy --strip-all -O binary target/$(target)/release/$(kernel) kernel8.img
 
 clean:
 	cargo clean && cargo fmt

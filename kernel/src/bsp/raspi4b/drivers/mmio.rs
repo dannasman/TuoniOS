@@ -9,6 +9,8 @@ static mut MMIO: sync::mutex::Mutex<Mmio> = sync::mutex::Mutex::new(Mmio::new())
 #[allow(non_camel_case_types)]
 pub enum Offset {
     GPIO_BASE = 0x200000,
+    GPFSEL1 = 0x200000 + 0x04,
+    GPIO_PUP_PDN_CNTRL_REG0 = 0x200000 + 0xE4,
     GPPUD = 0x200000 + 0x94,
     GPPUDCLK0 = 0x200000 + 0x98,
 
@@ -76,17 +78,18 @@ impl Mmio {
         b.read_volatile()
     }
 
-    // TODO
     pub fn map_pl011_uart(&mut self) {
-        unsafe { self.write(Offset::UART0_CR as usize, 0x0) }
+        let mut r: u32 = unsafe { self.read::<u32>(Offset::GPFSEL1 as usize) };
+        r = (r | (1 << 17) | (1 << 14)) & !(0b11 << 15) & !(0b11 << 12);
 
-        unsafe { self.write(Offset::GPPUD as usize, 0x0) }
-        delay(150);
+        unsafe { self.write(Offset::GPFSEL1 as usize, r) };
 
-        unsafe { self.write(Offset::GPPUDCLK0 as usize, (1 << 14) | (1 << 15)) }
-        delay(150);
-
-        unsafe { self.write(Offset::GPPUDCLK0 as usize, 0x0) }
+        unsafe {
+            self.write(
+                Offset::GPIO_PUP_PDN_CNTRL_REG0 as usize,
+                ((0b01 << 30) | (0b01 << 28)) as u32,
+            )
+        };
     }
 }
 
