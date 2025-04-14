@@ -1,5 +1,9 @@
 .section ".init"
 .globl _start
+.extern _binary_begin
+.extern _binary_end
+.extern _bss_begin_phys
+.extern _bss_end_physical_phys
 .extern _kernel_begin
 .extern _early_heap_begin
 .extern _stack_end
@@ -13,6 +17,34 @@ _start:
     wfe
     b       0b
 1:
+    movz    x0, #:abs_g2:_bss_begin_phys
+    movk    x0, #:abs_g1_nc:_bss_begin_phys
+    movk    x0, #:abs_g0_nc:_bss_begin_phys
+
+    movz    x1, #:abs_g2:_bss_end_phys
+    movk    x1, #:abs_g1_nc:_bss_end_phys
+    movk    x1, #:abs_g0_nc:_bss_end_phys
+bss_init_loop:
+    cmp     x0, x1
+    b.eq    relocate_binary
+    stp     xzr, xzr, [x0], 16
+    b       bss_init_loop
+relocate_binary:
+    adrp    x0, _binary_begin
+    add     x0, x0, #:lo12:_binary_begin
+
+    movz    x1, #:abs_g2:_binary_begin
+    movk    x1, #:abs_g1_nc:_binary_begin
+    movk    x1, #:abs_g0_nc:_binary_begin
+
+    movz    x2, #:abs_g2:_binary_end
+    movk    x2, #:abs_g1_nc:_binary_end
+    movk    x2, #:abs_g0_nc:_binary_end
+copy_loop:
+    ldr     x3, [x0], 8
+    str     x3, [x1], 8
+    cmp     x1, x2
+    b.lo    copy_loop
     msr     spsel, 1
     mrs     x0, CurrentEL
     and     x0, x0, 0b1100
@@ -39,7 +71,6 @@ in_el3:
     msr     elr_el3, x0
     eret
 in_el2:
-    msr     sctlr_el1, xzr
     mrs     x0, hcr_el2
     orr     x0, x0, (1 << 31)
     and     x0, x0, ~(1 << 5)
@@ -53,6 +84,7 @@ in_el2:
     msr     elr_el2, x0
     eret
 in_el1:
+    msr     sctlr_el1, xzr
     mov     x0, 0b0101
     msr     spsr_el1, x0
 
@@ -108,7 +140,6 @@ in_el1:
     orr     x0, x0, (1 << 12)
     msr     sctlr_el1, x0
     isb
-
     ldr     x0, =_kernel_begin
     ldr     x1, =_early_heap_begin
     ldr     x2, =_early_heap_end
