@@ -53,13 +53,16 @@ impl Mmio {
         self.base = base as *mut u8;
     }
 
-    pub unsafe fn write(&self, offset: usize, data: u8) {
-        self.base.add(offset).write_volatile(data)
+    #[inline(always)]
+    pub unsafe fn write<T>(&self, offset: usize, data: T) {
+        let b = self.base.add(offset) as *mut T;
+        b.write_volatile(data)
     }
 
     #[inline(always)]
-    pub unsafe fn read(&self, offset: usize) -> u8 {
-        self.base.add(offset).read_volatile()
+    pub unsafe fn read<T>(&self, offset: usize) -> T {
+        let b = self.base.add(offset) as *mut T;
+        b.read_volatile()
     }
 }
 
@@ -68,11 +71,11 @@ pub fn init(base: usize) {
 }
 
 #[inline(always)]
-pub fn write(offset: usize, data: u8) {
+pub fn write<T>(offset: usize, data: T) {
     unsafe { MMIO.lock().write(offset, data) }
 }
 
 #[inline(always)]
-pub fn read(offset: usize) -> u8 {
+pub fn read<T>(offset: usize) -> T {
     unsafe { MMIO.lock().read(offset) }
 }

@@ -16,6 +16,10 @@ impl Log {
         }
     }
 
+    fn write_byte(&mut self, b: u8) {
+        unsafe { UART.lock().write_byte(b) };
+    }
+
     fn read_byte() -> u8 {
         unsafe { UART.lock().read_byte() }
     }
@@ -24,6 +28,11 @@ impl Log {
 impl fmt::Write for Log {
     fn write_str(&mut self, msg: &str) -> fmt::Result {
         self.write_string(msg);
+        Ok(())
+    }
+
+    fn write_char(&mut self, c: char) -> fmt::Result {
+        self.write_byte(c as u8);
         Ok(())
     }
 }
@@ -42,8 +51,17 @@ pub fn write_fmt(args: fmt::Arguments) {
     log().write_fmt(args).unwrap();
 }
 
+pub fn write_char(c: char) {
+    use core::fmt::Write;
+    log().write_char(c).unwrap();
+}
+
 pub fn read_byte() -> u8 {
     Log::read_byte()
+}
+
+pub fn flush() {
+    unsafe { UART.lock().flush() };
 }
 
 #[macro_export]

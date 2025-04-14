@@ -19,6 +19,13 @@ const MMIO_BASE: usize = 0xFE00_0000;
 #[cfg(not(feature = "raspi4b"))]
 const MMIO_BASE: usize = 0x0800_0000;
 
+#[cfg(feature = "raspi4b")]
+const LOAD_ADDR: usize = 0x0400_0000;
+
+// FIXME: test the address properly
+#[cfg(not(feature = "raspi4b"))]
+const LOAD_ADDR: usize = 0x4400_0000;
+
 #[no_mangle]
 pub extern "C" fn kernel_main(x0: u64, x1: u64, x2: u64, x3: u64, x4: u64) -> ! {
     bsp::drivers::mmio::init(MMIO_BASE);
@@ -26,7 +33,7 @@ pub extern "C" fn kernel_main(x0: u64, x1: u64, x2: u64, x3: u64, x4: u64) -> ! 
     #[cfg(feature = "raspi4b")]
     log::init();
 
-    log_write!("mmio initialized\r\n");
+    log::flush();
 
     log_write!("Welcome to TuoniOS!\r\n");
     log_write!("Kernel begin at: {:#16x}\r\n", x0);
@@ -39,7 +46,37 @@ pub extern "C" fn kernel_main(x0: u64, x1: u64, x2: u64, x3: u64, x4: u64) -> ! 
     allocator::init(heap_base, HEAP_SIZE);
     log_write!("allocator initialized\r\n");
 
-    loop {
-        log_write!("{}", log::read_byte() as char);
+    log::flush();
+
+    for _ in 0..3 {
+        log::write_char(3 as char);
     }
+
+    let mut size: u32 = u32::from(log::read_byte());
+    size |= u32::from(log::read_byte()) << 8;
+    size |= u32::from(log::read_byte()) << 16;
+    size |= u32::from(log::read_byte()) << 24;
+
+    log::write_char('O');
+    log::write_char('K');
+
+    let kernel_addr: *mut u8 = LOAD_ADDR as *mut u8;
+    unsafe {
+        for i in 0..size {
+            kernel_addr
+                .offset(i as isize)
+                .write_volatile(log::read_byte());
+        }
+    }
+
+    log_write!(
+        "Image loaded ({:?} bytes)! Beginning the execution now.\r\n",
+        size
+    );
+
+    log::flush();
+
+    let kernel: fn() -> ! = unsafe { core::mem::transmute(kernel_addr) };
+
+    kernel();
 }
