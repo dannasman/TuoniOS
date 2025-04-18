@@ -127,9 +127,9 @@ pagetable_level0:
 pagetable_level1:
     .space 0x1000
 
-//          ATTR0:  0b00000000 << 0 | Device memory 
+//          ATTR0:  0b00000100 << 0 | Device memory
 //          ATTR1:  0b11111111 << 8 | Normal memory
-.equ        MAIR_EL1_VALUE, 0xff00
+.equ        MAIR_EL1_VALUE, 0xff04
 
 //          IPS:    0b101   << 32
 //          TG1:    0b10    << 30
