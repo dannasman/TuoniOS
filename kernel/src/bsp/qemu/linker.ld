@@ -2,9 +2,11 @@ ENTRY(_start)
 
 _peripherals_begin = 0x0;
 
+_binary_begin = 0x40080000;
+
 SECTIONS
 {
-    . = 0x40080000;
+    . = _binary_begin;
 
     .physical_boot.text : {
         _boot_start = .;
@@ -27,16 +29,23 @@ SECTIONS
     }
 
     .data ALIGN(4) : AT(ADDR(.data) - _offset) {
+        _data_start = .;
         *(.data*);
         . = ALIGN(8);
+        _data_end = .;
     }
 
-    .bss ALIGN(4)  : AT(ADDR(.bss) - _offset) {
+    _binary_end = _data_end - _offset;
+
+    .bss ALIGN(16)  : AT(ADDR(.bss) - _offset) {
         _bss_start = .;
         *(.bss .bss.*);
-        . = ALIGN(4);
+        . = ALIGN(16);
         _bss_end = .;
     }
+
+    _bss_begin_phys = _bss_start - _offset;
+    _bss_end_phys = _bss_end - _offset;
 
     _kernel_end = .;
 

@@ -44,7 +44,8 @@ impl Uart {
         );
     }
 
-    fn flush(&self) {
+    #[inline(always)]
+    pub fn flush(&self) {
         while mmio::read::<u8>(mmio::Offset::UART0_FR as usize) & FR_BUSY != 0 {}
     }
 

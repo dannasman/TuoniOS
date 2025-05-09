@@ -14,6 +14,11 @@ impl Uart {
     }
 
     #[inline(always)]
+    pub fn flush(&self) {
+        while mmio::read::<u8>(mmio::Offset::UART0_FR as usize) & FR_BUSY != 0 {}
+    }
+
+    #[inline(always)]
     pub fn write_byte(&self, byte: u8) {
         while self.read_flag_register() & FR_TXFF != 0 {}
 
