@@ -4,7 +4,7 @@ _peripherals_begin = 0xfe000000;
 
 SECTIONS
 {
-    . = 0x200000;
+    . = 0x2000000;
 
     .physical_boot.text : {
         _boot_start = .;
