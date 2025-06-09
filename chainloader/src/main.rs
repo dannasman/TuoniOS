@@ -92,7 +92,7 @@ fn read_flag_register() -> u8 {
 }
 
 #[no_mangle]
-pub extern "C" fn trampoline_main() -> ! {
+pub extern "C" fn chainloader_main() -> ! {
     let mut r: u32 = mmio_read::<u32>(Offset::GPFSEL1 as usize);
     r = (r | (1 << 17) | (1 << 14)) & !(0b11 << 15) & !(0b11 << 12);
 

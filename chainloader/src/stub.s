@@ -9,9 +9,9 @@ _start:
     wfe
     b       0b
 1:
-    ldr x0, =_stack_top
-    mov sp, x0
-    bl trampoline_main
+    ldr     x0, =_stack_top
+    mov     sp, x0
+    bl      chainloader_main
 2:
     b 2b
 

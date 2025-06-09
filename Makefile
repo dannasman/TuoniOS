@@ -13,11 +13,11 @@ qemuflags	:= -machine virt -m 2G -cpu cortex-a72 -nographic -s
 rustflags	:= -C link-arg=-Tkernel/src/bsp/qemu/linker.ld -C target-cpu=cortex-a72
 endif
 
-trampoline_manifest		:= trampoline/Cargo.toml
-trampoline_rustflags	:=	-C link-arg=-Ttrampoline/src/linker.ld -C target-cpu=cortex-a72
-trampoline_qemuflags	:= -machine raspi4b -m 2G -nographic -s
+chainloader_manifest	:= chainloader/Cargo.toml
+chainloader_rustflags	:=	-C link-arg=-Tchainloader/src/linker.ld -C target-cpu=cortex-a72
+chainloader_qemuflags	:= -machine raspi4b -m 2G -nographic -s
 
-.PHONY: all clean run kernel trampoline
+.PHONY: all clean run kernel chainloader
 
 all: kernel-release
 
@@ -27,11 +27,11 @@ run: kernel-release
 debug: kernel-debug
 	$(qemu) $(qemuflags) -S -kernel target/$(target)/debug/$(kernel)
 
-run-trampoline: trampoline-release
-	$(qemu) $(trampoline_qemuflags) -kernel target/$(target)/release/trampoline
+run-chainloader: chainloader-release
+	$(qemu) $(chainloader_qemuflags) -kernel target/$(target)/release/chainloader
 
-debug-trampoline: trampoline-debug
-	$(qemu) $(trampoline_qemuflags) -S -kernel target/$(target)/debug/trampoline
+debug-chainloader: chainloader-debug
+	$(qemu) $(chainloader_qemuflags) -S -kernel target/$(target)/debug/chainloader
 
 
 kernel-release: 
@@ -52,14 +52,14 @@ kernel-type-sizes: clean
 kernel-image: kernel-release
 	rust-objcopy --strip-all -O binary target/$(target)/release/$(kernel) kernel8.img
 
-trampoline-release:
-	RUSTFLAGS="$(trampoline_rustflags)" cargo rustc --manifest-path $(trampoline_manifest) --release
+chainloader-release:
+	RUSTFLAGS="$(chainloader_rustflags)" cargo rustc --manifest-path $(chainloader_manifest) --release
 
-trampoline-debug:
-	RUSTFLAGS="$(trampoline_rustflags)" cargo rustc --manifest-path $(trampoline_manifest)
+chainloader-debug:
+	RUSTFLAGS="$(chainloader_rustflags)" cargo rustc --manifest-path $(chainloader_manifest)
 
-trampoline-image: trampoline-release
-	rust-objcopy --strip-all -O binary target/$(target)/release/trampoline kernel8.img
+chainloader-image: chainloader-release
+	rust-objcopy --strip-all -O binary target/$(target)/release/chainloader kernel8.img
 
 clean:
 	cargo clean && cargo fmt
