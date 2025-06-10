@@ -8,7 +8,7 @@ use core::panic::PanicInfo;
 global_asm!(include_str!("stub.s"));
 
 const MMIO_BASE: usize = 0xFE00_0000;
-const LOAD_ADDR: usize = 0x0200_0000;
+const LOAD_ADDR: usize = 0x0020_0000;
 
 // const FLAG_REGISTER_OFFSET: usize = 0x18;
 const FR_BUSY: u8 = 1 << 3;
@@ -17,7 +17,7 @@ const FR_TXFF: u8 = 1 << 5;
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
-pub enum Offset {
+enum Offset {
     GPIO_BASE = 0x200000,
     GPFSEL1 = 0x200000 + 0x04,
     GPIO_PUP_PDN_CNTRL_REG0 = 0x200000 + 0xE4,
@@ -49,7 +49,7 @@ pub enum Offset {
 }
 
 #[inline(always)]
-pub fn mmio_write<T>(offset: usize, data: T) {
+fn mmio_write<T>(offset: usize, data: T) {
     unsafe {
         let base = MMIO_BASE as *mut u8;
         let adr = base.add(offset) as *mut T;
@@ -58,7 +58,7 @@ pub fn mmio_write<T>(offset: usize, data: T) {
 }
 
 #[inline(always)]
-pub fn mmio_read<T>(offset: usize) -> T {
+fn mmio_read<T>(offset: usize) -> T {
     unsafe {
         let base = MMIO_BASE as *mut u8;
         let adr = base.add(offset) as *mut T;
@@ -67,12 +67,12 @@ pub fn mmio_read<T>(offset: usize) -> T {
 }
 
 #[inline(always)]
-pub fn flush() {
+fn flush() {
     while mmio_read::<u8>(Offset::UART0_FR as usize) & FR_BUSY != 0 {}
 }
 
 #[inline(always)]
-pub fn write_byte(byte: u8) {
+fn write_byte(byte: u8) {
     while read_flag_register() & FR_TXFF != 0 {}
 
     mmio_write(Offset::UART0_BASE as usize, byte);
@@ -81,7 +81,7 @@ pub fn write_byte(byte: u8) {
 }
 
 #[inline(always)]
-pub fn read_byte() -> u8 {
+fn read_byte() -> u8 {
     while read_flag_register() & FR_RXFE != 0 {}
     mmio_read(Offset::UART0_BASE as usize)
 }
@@ -91,8 +91,7 @@ fn read_flag_register() -> u8 {
     mmio_read(Offset::UART0_FR as usize)
 }
 
-#[no_mangle]
-pub extern "C" fn chainloader_main() -> ! {
+fn uart_init() {
     let mut r: u32 = mmio_read::<u32>(Offset::GPFSEL1 as usize);
     r = (r | (1 << 17) | (1 << 14)) & !(0b11 << 15) & !(0b11 << 12);
 
@@ -123,6 +122,28 @@ pub extern "C" fn chainloader_main() -> ! {
         Offset::UART0_CR as usize,
         ((1 << 0) | (1 << 8) | (1 << 9)) as u32,
     );
+}
+
+fn uart_reset() {
+    mmio_write::<u32>(Offset::UART0_CR as usize, 0);
+
+    mmio_write::<u32>(Offset::UART0_ICR as usize, 0x7FF);
+
+    mmio_write::<u32>(Offset::UART0_IBRD as usize, 0);
+    mmio_write::<u32>(Offset::UART0_FBRD as usize, 0);
+
+    mmio_write::<u32>(Offset::UART0_LCRH as usize, 0);
+
+    mmio_write::<u32>(Offset::UART0_IFLS as usize, 0);
+    mmio_write::<u32>(Offset::UART0_DMACR as usize, 0);
+    mmio_write::<u32>(Offset::UART0_CR as usize, 0);
+
+    flush()
+}
+
+#[no_mangle]
+pub extern "C" fn chainloader_main() -> ! {
+    uart_init();
 
     for _ in 0..3 {
         write_byte(3);
@@ -144,6 +165,8 @@ pub extern "C" fn chainloader_main() -> ! {
     }
 
     flush();
+
+    uart_reset();
 
     let kernel: fn() -> ! = unsafe { core::mem::transmute(kernel_addr) };
 

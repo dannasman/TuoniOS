@@ -28,7 +28,7 @@ pub extern "C" fn kernel_main(x0: u64, x1: u64, x2: u64, x3: u64, x4: u64) -> ! 
 
     log_write!("mmio initialized\r\n");
 
-    log_write!("Welcome to TuoniOS!\r\n");
+    log_write!("Welcome to chainloaded TuoniOS!\r\n");
     log_write!("Kernel begin at: {:#16x}\r\n", x0);
     log_write!("Heap begin at: {:#16x}\r\n", x1);
     log_write!("Heap end at: {:#16x}\r\n", x2);
