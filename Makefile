@@ -42,9 +42,15 @@ define test_prepare
 	@chmod +x target/test_runner.sh
 endef
 
-test:
+test_unit:
 	$(call test_prepare)
 	RUSTFLAGS="$(rustflags)" cargo test --manifest-path $(kernel_manifest) $(features) --release --lib
+
+test_integration:
+	$(call test_prepare)
+	RUSTFLAGS="$(rustflags)" cargo test --manifest-path $(kernel_manifest) $(features) --release --test '*'
+
+test: test_unit test_integration
 
 run-chainloader: chainloader-release
 	$(qemu) $(chainloader_qemuflags) -kernel target/$(target)/release/chainloader

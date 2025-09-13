@@ -11,6 +11,10 @@ test = true
 name = "tuoni"
 test = false
 
+[[test]]
+name = "init"
+harness = false
+
 [dependencies]
 
 [profile.dev]
