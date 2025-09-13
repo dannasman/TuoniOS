@@ -27,12 +27,30 @@ run: kernel-release
 debug: kernel-debug
 	$(qemu) $(qemuflags) -S -kernel target/$(target)/debug/$(kernel)
 
+define TEST_RUNNER
+#!/usr/bin/env bash
+	cd $(shell pwd)
+	TEST_ELF=$$(echo $$1 | sed -e 's/.*target/target/g')
+	$(qemu) $(qemuflags) -kernel $$TEST_ELF
+endef
+
+export TEST_RUNNER
+
+define test_prepare
+	@mkdir -p target
+	@echo "$$TEST_RUNNER" > target/test_runner.sh
+	@chmod +x target/test_runner.sh
+endef
+
+test:
+	$(call test_prepare)
+	RUSTFLAGS="$(rustflags)" cargo test --manifest-path $(kernel_manifest) $(features) --release --lib
+
 run-chainloader: chainloader-release
 	$(qemu) $(chainloader_qemuflags) -kernel target/$(target)/release/chainloader
 
 debug-chainloader: chainloader-debug
 	$(qemu) $(chainloader_qemuflags) -S -kernel target/$(target)/debug/chainloader
-
 
 kernel-release: 
 	RUSTFLAGS="$(rustflags)" cargo build --manifest-path $(kernel_manifest) --release $(features)

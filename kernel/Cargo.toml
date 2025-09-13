@@ -3,6 +3,14 @@ name = "tuoni"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "libtuoni"
+test = true
+
+[[bin]]
+name = "tuoni"
+test = false
+
 [dependencies]
 
 [profile.dev]
